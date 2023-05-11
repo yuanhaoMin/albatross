@@ -26,19 +26,19 @@ def agent_search():
     if not question:
         return jsonify({"error": "question parameter not provided"}), 400
     # Capture standard output in a string buffer
-    stdout_buffer = StringIO()
-    sys.stdout = stdout_buffer
+    # stdout_buffer = StringIO()
+    # sys.stdout = stdout_buffer
     output, cost, total_tokens, successful_requests = agent_google_search.run(question)
     # Restore the standard output and get the captured string
-    sys.stdout = sys.__stdout__
-    captured_stdout = stdout_buffer.getvalue()
+    # sys.stdout = sys.__stdout__
+    # captured_stdout = stdout_buffer.getvalue()
     response_data = {
         "output": output,
         "metadata": {
             "cost": cost,
             "total_tokens": total_tokens,
             "successful_requests": successful_requests,
-            "stdout": captured_stdout,
+            "stdout": "captured_stdout",
         },
     }
     return jsonify(response_data)

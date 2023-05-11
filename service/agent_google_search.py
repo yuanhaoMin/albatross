@@ -2,18 +2,29 @@ from langchain import OpenAI, SerpAPIWrapper
 from langchain.agents import AgentType, Tool, initialize_agent, load_tools
 from langchain.callbacks import get_openai_callback
 from langchain.chat_models import ChatOpenAI
+from langchain.schema import HumanMessage
 
 
 def run(question):
     OPENAI_API_KEY = "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"
     SERPER_API_KEY = "229ff3e91d7fb50b419ab802a6366c2ce823a079"
-    # llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, streaming=True)
+    # warm up request
+    warmUpLlm = ChatOpenAI(
+        model_name="gpt-3.5-turbo",
+        temperature=0,
+        request_timeout=1,
+        max_retries=1,
+        streaming=True,
+    )
+    warmUpLlm([HumanMessage(content="1+1=? Answer in one word")])
+    # initialize llm
     llm = OpenAI(
         model_name="text-davinci-003",
         temperature=0,
         max_tokens=1024,
+        request_timeout=30,
+        max_retries=1,
         streaming=True,
-        request_timeout=40,
     )
     # search = SerpAPIWrapper()
     # tools = [
