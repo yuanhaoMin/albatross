@@ -6,37 +6,51 @@ from langchain.schema import HumanMessage
 
 
 def run(question):
-    OPENAI_API_KEY = "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"
-    SERPER_API_KEY = "229ff3e91d7fb50b419ab802a6366c2ce823a079"
+    openai_api_key = "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"
+    serper_api_key = "da244df9ed10bbc6eeb85d2708a90435840da9c7904b3cf9a3883c44483a5090"
     # warm up request
     warmUpLlm = ChatOpenAI(
         model_name="gpt-3.5-turbo",
         temperature=0,
-        request_timeout=1,
+        openai_api_key=openai_api_key,
+        request_timeout=2,
         max_retries=1,
         streaming=True,
     )
-    warmUpLlm([HumanMessage(content="1+1=? Answer in one word")])
+    warmUpLlm([HumanMessage(content="1+1=?Answer in one word")])
     # initialize llm
     llm = OpenAI(
         model_name="text-davinci-003",
         temperature=0,
         max_tokens=1024,
+        openai_api_key=openai_api_key,
         request_timeout=30,
         max_retries=1,
-        streaming=True,
+        streaming=False,
     )
-    # search = SerpAPIWrapper()
-    # tools = [
-    #     Tool(name="Intermediate Answer", func=search.run, description="google search")
-    # ]
-    tools = load_tools(["serpapi", "llm-math"], llm=llm)
+    search = SerpAPIWrapper(
+        serpapi_api_key=serper_api_key,
+        params={
+            "engine": "google",
+            "google_domain": "google.com",
+            "gl": "cn",
+            "hl": "zh-cn",
+        },
+    )
+    tools = [
+        Tool(
+            name="Google Search",
+            func=search.run,
+            description="Search Google for recent results",
+        )
+    ]
     agent = initialize_agent(
-        tools,
-        llm,
+        tools=tools,
+        llm=llm,
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
         max_iterations=5,
         verbose=True,
+        serper_api_key=serper_api_key,
     )
     with get_openai_callback() as cb:
         output = agent.run(question)
