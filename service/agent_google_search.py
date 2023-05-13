@@ -14,7 +14,7 @@ def run(question):
         temperature=0,
         openai_api_key=openai_api_key,
         request_timeout=2,
-        max_retries=1,
+        max_retries=0,
         streaming=True,
     )
     warmUpLlm([HumanMessage(content="1+1=?Answer in one word")])
