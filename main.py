@@ -2,8 +2,8 @@
 # uvicorn main:app --reload
 import logging
 import requests
-from fastapi import FastAPI, HTTPException, Request
-from io import StringIO
+from config.constant import APIKey
+from fastapi import FastAPI, HTTPException
 from openai.error import Timeout
 from pydantic import BaseModel
 from starlette.middleware import Middleware
@@ -75,7 +75,7 @@ class ImagineGPTRequest(BaseModel):
 def imagine(request: ImagineGPTRequest):
     headers = {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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",
+        "Authorization": "Bearer " + APIKey.OPENAI_API_KEY,
     }
     data = {"prompt": request.prompt, "n": request.n, "size": request.size}
     response = requests.post(
