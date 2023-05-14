@@ -49,9 +49,18 @@ def run(question):
         llm=llm,
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
         max_iterations=5,
-        verbose=True,
-        serper_api_key=serper_api_key,
+        return_intermediate_steps=True,
+        verbose=False,
     )
     with get_openai_callback() as cb:
-        output = agent.run(question)
-    return output, cb.total_cost, cb.total_tokens, cb.successful_requests
+        # Input must be a list
+        output_data = agent.apply([question])
+    final_answer = output_data[0]["output"]
+    intermediate_steps = output_data[0]["intermediate_steps"]
+    return (
+        final_answer,
+        intermediate_steps,
+        cb.total_cost,
+        cb.total_tokens,
+        cb.successful_requests,
+    )

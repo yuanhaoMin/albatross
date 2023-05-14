@@ -2,8 +2,7 @@
 # uvicorn main:app --reload
 import logging
 import requests
-import sys
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from io import StringIO
 from openai.error import Timeout
 from pydantic import BaseModel
@@ -37,28 +36,31 @@ class AgentSearchRequest(BaseModel):
 def agent_search(request: AgentSearchRequest):
     if not request.question:
         raise HTTPException(status_code=400, detail="Question must not be empty")
-    # Capture standard output in a string buffer
-    stdout_buffer = StringIO()
-    sys.stdout = stdout_buffer
     try:
-        output, cost, total_tokens, successful_requests = agent_google_search.run(
-            request.question
-        )
+        (
+            final_answer,
+            intermediate_steps,
+            cost,
+            total_tokens,
+            successful_requests,
+        ) = agent_google_search.run(request.question)
     except Timeout as e:
         logger.error("OpenAI API timeout, retrying...")
-        output, cost, total_tokens, successful_requests = agent_google_search.run(
-            request.question
-        )
-    # Restore the standard output and get the captured string
-    sys.stdout = sys.__stdout__
-    captured_stdout = stdout_buffer.getvalue()
+        (
+            final_answer,
+            intermediate_steps,
+            cost,
+            total_tokens,
+            successful_requests,
+        ) = agent_google_search.run(request.question)
+    logger.info("final_answer: %s", final_answer)
     return {
-        "output": output,
+        "final_answer": final_answer,
+        "intermediate_steps": intermediate_steps,
         "metadata": {
             "cost": cost,
             "total_tokens": total_tokens,
             "successful_requests": successful_requests,
-            "stdout": captured_stdout,
         },
     }
 
