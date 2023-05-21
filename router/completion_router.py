@@ -1,6 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from service import openai_completion
+from service import openai_completion_service
+from sqlalchemy.orm import Session
+
 
 router = APIRouter(
     prefix="/completion",
@@ -12,5 +14,6 @@ router = APIRouter(
 @router.get("/openai/completion-stream")
 async def openai_complete_with_stream(username: str):
     return StreamingResponse(
-        openai_completion.complete_with_stream(username), media_type="text/event-stream"
+        openai_completion_service.complete_with_stream(username),
+        media_type="text/event-stream",
     )

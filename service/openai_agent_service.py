@@ -4,7 +4,6 @@ from langchain.agents import AgentType, Tool, initialize_agent
 
 
 def online_search(question):
-    # initialize llm
     llm = OpenAI(
         model_name="text-davinci-003",
         temperature=0,

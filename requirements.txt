@@ -6,5 +6,6 @@ openai==0.27.7
 pydantic==1.10.7
 pyodbc==4.0.39
 Requests==2.30.0
+SQLAlchemy==2.0.12
 starlette==0.27.0
 uvicorn==0.22.0

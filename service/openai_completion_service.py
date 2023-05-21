@@ -1,12 +1,8 @@
 import json
-from configuration.database import SessionLocal
-from persistence.app_user_schema import AppUserCreate
-from persistence.app_user_crud import create_user
 from configuration.constant import APIKey
 from langchain import OpenAI
 
-
-def complete_with_stream(username):
+def complete_with_stream(username: str):
     # llm = OpenAI(
     #     model_name="text-davinci-003",
     #     temperature=0,
@@ -22,8 +18,4 @@ def complete_with_stream(username):
     #     print(response)
     #     yield json.dumps(response)
     response = "Hi"
-    app_user = AppUserCreate(
-        username="your_username", password="your_password")
-    create_user(SessionLocal, app_user=app_user)
-
     yield response

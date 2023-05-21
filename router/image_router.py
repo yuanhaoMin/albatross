@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
-from service import openai_image
+from pydantic import BaseModel, Field
+from service import openai_image_service
 
 router = APIRouter(
     prefix="/image",
@@ -10,11 +10,11 @@ router = APIRouter(
 
 
 class ImageOpenAIGenerationRequest(BaseModel):
-    prompt: str
+    prompt: str = Field(min_length=1)
     n: int
     size: str
 
 
 @router.post("/openai/generation")
 async def openai_generate_images(request: ImageOpenAIGenerationRequest):
-    return openai_image.generate_images(request.prompt, request.n, request.size)
+    return openai_image_service.generate_images(request.prompt, request.n, request.size)
