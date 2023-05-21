@@ -1,4 +1,4 @@
-from config.constant import APIKey
+from configuration.constant import APIKey
 from langchain import OpenAI, SerpAPIWrapper
 from langchain.agents import AgentType, Tool, initialize_agent
 

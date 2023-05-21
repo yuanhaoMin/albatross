@@ -1,4 +1,8 @@
 {
     "appService.defaultWebAppToDeploy": "/subscriptions/2ee9858b-a645-4ffd-9025-4dedd9c3192d/resourceGroups/albatross21/providers/Microsoft.Web/sites/albatross21",
-    "appService.deploySubpath": "."
+    "appService.deploySubpath": ".",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8"
+    },
+    "python.formatting.provider": "none"
 }

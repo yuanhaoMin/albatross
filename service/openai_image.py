@@ -1,4 +1,4 @@
-from config.constant import APIKey
+from configuration.constant import APIKey
 from openai import Image
 
 
