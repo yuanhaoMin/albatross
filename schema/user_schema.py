@@ -6,15 +6,13 @@ class UserBase(BaseModel):
     username: str = Field(min_length=3, max_length=20)
 
 
-class UserRegister(UserBase):
+class RegisterUserRequest(UserBase):
     password: str
 
 
-class User(UserBase):
+class RegisterUserResponse(UserBase):
     id: int
-    access_bitmap: int
     created_time: datetime
-    last_login_time: datetime
 
     class Config:
         orm_mode = True

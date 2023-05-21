@@ -12,8 +12,10 @@ router = APIRouter(
 )
 
 
-@router.post("/register", response_model=user_schema.User)
-def register_user(request: user_schema.UserRegister, db: Session = Depends(get_db)):
+@router.post("/register", response_model=user_schema.RegisterUserResponse)
+def register_user(
+    request: user_schema.RegisterUserRequest, db: Session = Depends(get_db)
+):
     user_with_same_username = user_service.get_by_username(request.username, db)
     if user_with_same_username:
         raise HTTPException(status_code=409, detail="Username already exists")
