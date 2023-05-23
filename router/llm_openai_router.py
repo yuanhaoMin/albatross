@@ -7,7 +7,7 @@ from util.db_util import get_db
 
 
 router = APIRouter(
-    prefix="/completion/openai",
+    prefix="/llm/openai",
     tags=["completion openai"],
     responses={404: {"description": "Not found"}},
 )
@@ -15,7 +15,7 @@ router = APIRouter(
 
 @router.get("/completion-stream", response_class=StreamingResponse)
 def complete_with_stream(username: str, test_mode: bool, db: Session = Depends(get_db)):
-    llm, prompt = openai_completion_service.prepare_completion_with_stream(username, db)
+    llm, prompt = openai_completion_service.prepare_completion(username, db)
     if test_mode:
         return StreamingResponse(
             openai_completion_service.generate_test_stream(prompt),
@@ -28,8 +28,8 @@ def complete_with_stream(username: str, test_mode: bool, db: Session = Depends(g
         )
 
 
-@router.post(
-    "/update", response_model=openai_completion_schema.UpdateCompletionResponse
+@router.put(
+    "/completion", response_model=openai_completion_schema.UpdateCompletionResponse
 )
 def update_completion(
     request: openai_completion_schema.UpdateCompletionRequest,

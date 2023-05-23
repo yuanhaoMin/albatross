@@ -3,6 +3,8 @@ import json
 from configuration.constant import APIKey
 from fastapi import HTTPException
 from langchain import OpenAI
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from openai.error import Timeout
 from persistence import openai_completion_crud
 from persistence.openai_completion_model import OpenAICompletion
@@ -17,34 +19,44 @@ def update_completion(
     request: openai_completion_schema.UpdateCompletionRequest, db: Session
 ) -> OpenAICompletion:
     user = user_service.get_user_by_username(request.username, db)
-    user_id = user.id
     update_time = get_current_berlin_time()
-    return openai_completion_crud.create_update_completion(
-        user_id=user_id,
-        prompt=request.prompt,
-        model=request.model,
-        temperature=request.temperature,
-        update_time=update_time,
-        db=db,
-    )
+    print(request.prompt.encode("utf-8"))
+    if user.completion is None:
+        return openai_completion_crud.create_completion(
+            user_id=user.id,
+            prompt=request.prompt,
+            model=request.model,
+            temperature=request.temperature,
+            update_time=update_time,
+            db=db,
+        )
+    else:
+        return openai_completion_crud.update_completion(
+            completion_to_update=user.completion,
+            prompt=request.prompt,
+            model=request.model,
+            temperature=request.temperature,
+            update_time=update_time,
+            db=db,
+        )
 
 
-def prepare_completion_with_stream(username: str, db: Session) -> Tuple[OpenAI, str]:
+def prepare_completion(username: str, db: Session) -> Tuple[OpenAI, str]:
     user = user_service.get_user_by_username(username, db)
-    completion = openai_completion_crud.get_completion_by_user_id(user.id, db)
+    completion = user.completion
     llm = OpenAI(
         model_name=completion.model,
         temperature=completion.temperature,
-        max_tokens=4000,
         openai_api_key=APIKey.OPENAI_API_KEY,
         request_timeout=2,
         max_retries=1,
         streaming=True,
     )
+    llm.max_tokens = llm.max_tokens_for_prompt(completion.prompt)
     return (llm, completion.prompt)
 
 
-async def generate_completion_stream(llm: OpenAI, prompt: str) -> str:
+def generate_completion_stream(llm: OpenAI, prompt: str) -> str:
     try:
         for stream_response in llm.stream(prompt):
             chunk_data = {"data": stream_response["choices"][0]["text"]}

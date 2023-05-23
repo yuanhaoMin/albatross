@@ -10,9 +10,12 @@ def test_endpoint(url):
             print(json_data)
 
 
-test_endpoint(
-    "http://127.0.0.1:8000/completion/openai/completion-stream?username=user&test_mode=false"
+local_base_url = "http://127.0.0.1:8000"
+completion_stream_url = (
+    local_base_url + "/llm/openai/completion-stream?username=user&test_mode=false"
 )
+
+test_endpoint(completion_stream_url)
 
 # # Define the URLs
 # urls = [

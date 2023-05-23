@@ -12,14 +12,14 @@ def login_user(request: user_schema.LoginUserRequest, db: Session) -> AppUser:
         password=request.password,
         db=db,
     )
-    if not user:
+    if user is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return user_crud.update_user_last_login(user.id, get_current_berlin_time(), db)
 
 
 def register_user(request: user_schema.RegisterUserRequest, db: Session) -> AppUser:
-    user_with_same_username = get_user_by_username(request.username, db)
-    if user_with_same_username:
+    user_with_same_username = user_crud.get_user_by_username(request.username, db)
+    if user_with_same_username is not None:
         raise HTTPException(status_code=409, detail="Username already exists")
     created_time = get_current_berlin_time()
     return user_crud.create_user(
@@ -32,7 +32,7 @@ def register_user(request: user_schema.RegisterUserRequest, db: Session) -> AppU
 
 def get_user_by_username(username: str, db: Session) -> AppUser:
     user = user_crud.get_user_by_username(username=username, db=db)
-    if not user:
+    if user is None:
         raise HTTPException(
             status_code=400,
             detail="User does not exist".format(username),

@@ -3,7 +3,7 @@ from persistence.openai_completion_model import OpenAICompletion
 from sqlalchemy.orm import Session
 
 
-def create_update_completion(
+def create_completion(
     user_id: int,
     prompt: str,
     model: str,
@@ -11,29 +11,31 @@ def create_update_completion(
     update_time: datetime,
     db: Session,
 ) -> OpenAICompletion:
-    db_completion = (
-        db.query(OpenAICompletion).filter(OpenAICompletion.user_id == user_id).first()
+    db_completion = OpenAICompletion(
+        user_id=user_id,
+        prompt=prompt,
+        model=model,
+        temperature=temperature,
+        update_time=update_time,
     )
-    if db_completion is None:
-        db_completion = OpenAICompletion(
-            user_id=user_id,
-            prompt=prompt,
-            model=model,
-            temperature=temperature,
-            update_time=update_time,
-        )
-        db.add(db_completion)
-    else:
-        db_completion.prompt = prompt
-        db_completion.model = model
-        db_completion.temperature = temperature
-        db_completion.update_time = update_time
+    db.add(db_completion)
     db.commit()
     db.refresh(db_completion)
     return db_completion
 
 
-def get_completion_by_user_id(user_id: int, db: Session) -> OpenAICompletion:
-    return (
-        db.query(OpenAICompletion).filter(OpenAICompletion.user_id == user_id).first()
-    )
+def update_completion(
+    completion_to_update: OpenAICompletion,
+    prompt: str,
+    model: str,
+    temperature: float,
+    update_time: datetime,
+    db: Session,
+) -> OpenAICompletion:
+    completion_to_update.prompt = prompt
+    completion_to_update.model = model
+    completion_to_update.temperature = temperature
+    completion_to_update.update_time = update_time
+    db.commit()
+    db.refresh(completion_to_update)
+    return completion_to_update
