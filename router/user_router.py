@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from schema import user_schema
 from service import user_service
 from sqlalchemy.orm import Session
@@ -12,11 +12,15 @@ router = APIRouter(
 )
 
 
+@router.post("/login", response_model=user_schema.LoginUserResponse)
+def login_user(
+    request: user_schema.LoginUserRequest, db: Session = Depends(get_db)
+) -> user_schema.LoginUserResponse:
+    return user_service.login_user(request, db)
+
+
 @router.post("/register", response_model=user_schema.RegisterUserResponse)
 def register_user(
     request: user_schema.RegisterUserRequest, db: Session = Depends(get_db)
-):
-    user_with_same_username = user_service.get_by_username(request.username, db)
-    if user_with_same_username:
-        raise HTTPException(status_code=409, detail="Username already exists")
-    return user_service.register(request, db)
+) -> user_schema.RegisterUserResponse:
+    return user_service.register_user(request, db)

@@ -1,6 +1,5 @@
 import logging
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
 from openai.error import Timeout
 from pydantic import BaseModel
 from service import openai_agent_service
@@ -19,7 +18,7 @@ class AgentOpenAIOnlineSearchRequest(BaseModel):
 
 
 @router.post("/openai/online-search")
-async def openai_search_online(request: AgentOpenAIOnlineSearchRequest):
+def openai_search_online(request: AgentOpenAIOnlineSearchRequest):
     if not request.question:
         raise HTTPException(status_code=400, detail="Question must not be empty")
     try:

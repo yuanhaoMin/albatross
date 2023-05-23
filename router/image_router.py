@@ -16,5 +16,5 @@ class ImageOpenAIGenerationRequest(BaseModel):
 
 
 @router.post("/openai/generation")
-async def openai_generate_images(request: ImageOpenAIGenerationRequest):
+def openai_generate_images(request: ImageOpenAIGenerationRequest):
     return openai_image_service.generate_images(request.prompt, request.n, request.size)

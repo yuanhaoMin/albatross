@@ -1,7 +1,6 @@
 from configuration.database import Base
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, TIMESTAMP
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
 
 class AppUser(Base):
@@ -13,3 +12,4 @@ class AppUser(Base):
     access_bitmap = Column(Integer, default=1)
     created_time = Column(TIMESTAMP)
     last_login_time = Column(TIMESTAMP)
+    completion = relationship("OpenAICompletion", uselist=False, backref="parent")
