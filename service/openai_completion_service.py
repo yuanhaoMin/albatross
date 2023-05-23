@@ -1,39 +1,38 @@
 import asyncio
 import json
 from configuration.constant import APIKey
-from fastapi import HTTPException
-from langchain import OpenAI
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
-from openai.error import Timeout
-from persistence import openai_completion_crud
+from langchain.llms import OpenAI
+from persistence.openai_completion_crud import create_completion, update_completion
 from persistence.openai_completion_model import OpenAICompletion
-from schema import openai_completion_schema
-from service import user_service
+from schema.openai_completion_schema import UpdateCompletionRequest
+from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
 from typing import Tuple
 from util.time_util import get_current_berlin_time
+from util.tokenizer_util import detokenize, tokenize_and_convert_to_json_string
 
 
-def update_completion(
-    request: openai_completion_schema.UpdateCompletionRequest, db: Session
+def create_update_completion(
+    request: UpdateCompletionRequest, db: Session
 ) -> OpenAICompletion:
-    user = user_service.get_user_by_username(request.username, db)
+    user = get_user_by_username(request.username, db)
+    tokenized_prompt_json = tokenize_and_convert_to_json_string(
+        request.model, request.prompt
+    )
     update_time = get_current_berlin_time()
-    print(request.prompt.encode("utf-8"))
     if user.completion is None:
-        return openai_completion_crud.create_completion(
+        return create_completion(
             user_id=user.id,
-            prompt=request.prompt,
+            prompt=tokenized_prompt_json,
             model=request.model,
             temperature=request.temperature,
             update_time=update_time,
             db=db,
         )
     else:
-        return openai_completion_crud.update_completion(
+        return update_completion(
             completion_to_update=user.completion,
-            prompt=request.prompt,
+            prompt=tokenized_prompt_json,
             model=request.model,
             temperature=request.temperature,
             update_time=update_time,
@@ -42,28 +41,28 @@ def update_completion(
 
 
 def prepare_completion(username: str, db: Session) -> Tuple[OpenAI, str]:
-    user = user_service.get_user_by_username(username, db)
+    user = get_user_by_username(username, db)
     completion = user.completion
+    tokenized_prompt = json.loads(completion.prompt)
+    original_prompt = detokenize(completion.model, tokenized_prompt)
+    max_size = OpenAI.modelname_to_contextsize(OpenAI, completion.model)
+    max_tokens = max_size - len(tokenized_prompt)
     llm = OpenAI(
         model_name=completion.model,
         temperature=completion.temperature,
+        max_tokens=max_tokens,
         openai_api_key=APIKey.OPENAI_API_KEY,
         request_timeout=2,
         max_retries=1,
         streaming=True,
     )
-    llm.max_tokens = llm.max_tokens_for_prompt(completion.prompt)
-    return (llm, completion.prompt)
+    return (llm, original_prompt)
 
 
 def generate_completion_stream(llm: OpenAI, prompt: str) -> str:
-    try:
-        for stream_response in llm.stream(prompt):
-            chunk_data = {"data": stream_response["choices"][0]["text"]}
-            yield json.dumps(chunk_data)
-    except Timeout:
-        # TODO: cancel the stream when timeout
-        raise HTTPException(status_code=504, detail="OpenAI read timeout")
+    for stream_response in llm.stream(prompt):
+        chunk_data = {"data": stream_response["choices"][0]["text"]}
+        yield json.dumps(chunk_data)
 
 
 async def generate_test_stream(text: str) -> str:

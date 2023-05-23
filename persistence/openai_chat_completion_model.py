@@ -7,7 +7,7 @@ class OpenAIChatCompletion(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("app_user.id"))
-    history = Column(String)
+    messages = Column(String)
     model = Column(String)
     temperature = Column(Float)
     update_time = Column(TIMESTAMP)

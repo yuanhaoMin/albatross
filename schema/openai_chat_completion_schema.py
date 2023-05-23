@@ -17,6 +17,8 @@ class ChatCompletionBase(BaseModel):
 class UpdateChatCompletionRequest(ChatCompletionBase):
     username: str
     chat_completion_id: Optional[int] = None
+    system_message: Optional[str] = ""
+    user_message: str = Field(min_length=1)
 
 
 class UpdateChatCompletionResponse(ChatCompletionBase):

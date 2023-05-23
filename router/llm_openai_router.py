@@ -1,38 +1,86 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from schema import openai_completion_schema
-from service import openai_completion_service
+from schema.openai_completion_schema import (
+    UpdateCompletionRequest,
+    UpdateCompletionResponse,
+)
+from schema.openai_chat_completion_schema import (
+    UpdateChatCompletionRequest,
+    UpdateChatCompletionResponse,
+)
+from service.openai_completion_service import (
+    create_update_completion,
+    generate_completion_stream,
+    generate_test_stream,
+    prepare_completion,
+)
+from service.openai_chat_completion_service import (
+    create_update_chat_completion,
+    delete_chat_completion,
+    generate_chat_completion_stream,
+    prepare_chat_completion,
+)
 from sqlalchemy.orm import Session
 from util.db_util import get_db
 
 
 router = APIRouter(
     prefix="/llm/openai",
-    tags=["completion openai"],
+    tags=["llm openai"],
     responses={404: {"description": "Not found"}},
 )
 
 
-@router.get("/completion-stream", response_class=StreamingResponse)
-def complete_with_stream(username: str, test_mode: bool, db: Session = Depends(get_db)):
-    llm, prompt = openai_completion_service.prepare_completion(username, db)
+@router.get("/chat-completion-stream", response_class=StreamingResponse)
+def chat_with_stream(
+    chat_completion_id: int, test_mode: bool, db: Session = Depends(get_db)
+):
+    chat_completion, chat_model, messages, db = prepare_chat_completion(
+        chat_completion_id, db
+    )
     if test_mode:
         return StreamingResponse(
-            openai_completion_service.generate_test_stream(prompt),
+            generate_test_stream(messages),
             media_type="text/event-stream",
         )
     else:
         return StreamingResponse(
-            openai_completion_service.generate_completion_stream(llm, prompt),
+            generate_chat_completion_stream(chat_completion, chat_model, messages, db),
             media_type="text/event-stream",
         )
 
 
-@router.put(
-    "/completion", response_model=openai_completion_schema.UpdateCompletionResponse
-)
-def update_completion(
-    request: openai_completion_schema.UpdateCompletionRequest,
+@router.get("/completion-stream", response_class=StreamingResponse)
+def complete_with_stream(username: str, test_mode: bool, db: Session = Depends(get_db)):
+    llm, prompt = prepare_completion(username, db)
+    if test_mode:
+        return StreamingResponse(
+            generate_test_stream(prompt),
+            media_type="text/event-stream",
+        )
+    else:
+        return StreamingResponse(
+            generate_completion_stream(llm, prompt),
+            media_type="text/event-stream",
+        )
+
+
+@router.delete("/chat-completion/{chat_completion_id}")
+def reset_chat_completion(chat_completion_id: int, db: Session = Depends(get_db)):
+    return delete_chat_completion(chat_completion_id, db)
+
+
+@router.put("/chat-completion", response_model=UpdateChatCompletionResponse)
+def update_chat_completion(
+    request: UpdateChatCompletionRequest,
     db: Session = Depends(get_db),
 ):
-    return openai_completion_service.update_completion(request, db)
+    return create_update_chat_completion(request, db)
+
+
+@router.put("/completion", response_model=UpdateCompletionResponse)
+def update_completion(
+    request: UpdateCompletionRequest,
+    db: Session = Depends(get_db),
+):
+    return create_update_completion(request, db)
