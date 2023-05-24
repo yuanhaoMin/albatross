@@ -9,21 +9,17 @@ from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
 from typing import Tuple
 from util.time_util import get_current_berlin_time
-from util.tokenizer_util import detokenize, tokenize_and_convert_to_json_string
 
 
 def create_update_completion(
     request: UpdateCompletionRequest, db: Session
 ) -> OpenAICompletion:
     user = get_user_by_username(request.username, db)
-    tokenized_prompt_json = tokenize_and_convert_to_json_string(
-        request.model, request.prompt
-    )
     update_time = get_current_berlin_time()
     if user.completion is None:
         return create_completion(
             user_id=user.id,
-            prompt=tokenized_prompt_json,
+            prompt=request.prompt,
             model=request.model,
             temperature=request.temperature,
             update_time=update_time,
@@ -32,7 +28,7 @@ def create_update_completion(
     else:
         return update_completion(
             completion_to_update=user.completion,
-            prompt=tokenized_prompt_json,
+            prompt=request.prompt,
             model=request.model,
             temperature=request.temperature,
             update_time=update_time,
@@ -43,20 +39,16 @@ def create_update_completion(
 def prepare_completion(username: str, db: Session) -> Tuple[OpenAI, str]:
     user = get_user_by_username(username, db)
     completion = user.completion
-    tokenized_prompt = json.loads(completion.prompt)
-    original_prompt = detokenize(completion.model, tokenized_prompt)
-    max_size = OpenAI.modelname_to_contextsize(OpenAI, completion.model)
-    max_tokens = max_size - len(tokenized_prompt)
     llm = OpenAI(
         model_name=completion.model,
         temperature=completion.temperature,
-        max_tokens=max_tokens,
         openai_api_key=APIKey.OPENAI_API_KEY,
         request_timeout=2,
         max_retries=1,
         streaming=True,
     )
-    return (llm, original_prompt)
+    llm.max_tokens = llm.max_tokens_for_prompt(completion.prompt)
+    return (llm, completion.prompt)
 
 
 def generate_completion_stream(llm: OpenAI, prompt: str) -> str:

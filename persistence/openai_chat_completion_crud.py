@@ -24,6 +24,15 @@ def create_chat_completion(
     return db_completion
 
 
+def delete_chat_completions(
+    chat_completions: list[OpenAIChatCompletion],
+    db: Session,
+) -> None:
+    for chat_completion in chat_completions:
+        db.delete(chat_completion)
+    db.commit()
+
+
 def delete_chat_completion_by_id(
     chat_completion_id: int,
     db: Session,

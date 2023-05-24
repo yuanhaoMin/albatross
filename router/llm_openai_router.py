@@ -16,6 +16,7 @@ from service.openai_completion_service import (
 )
 from service.openai_chat_completion_service import (
     create_update_chat_completion,
+    delete_user_chat_completions,
     delete_chat_completion,
     generate_chat_completion_stream,
     prepare_chat_completion,
@@ -63,6 +64,11 @@ def complete_with_stream(username: str, test_mode: bool, db: Session = Depends(g
             generate_completion_stream(llm, prompt),
             media_type="text/event-stream",
         )
+
+
+@router.delete("/chat-completion")
+def reset_user_chat_completions(username: str, db: Session = Depends(get_db)):
+    return delete_user_chat_completions(username, db)
 
 
 @router.delete("/chat-completion/{chat_completion_id}")
