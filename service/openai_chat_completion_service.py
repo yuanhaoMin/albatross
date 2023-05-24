@@ -61,7 +61,7 @@ def create_update_chat_completion(
         history: Type[list[BaseMessage]] = eval(chat_completion_to_update.messages)
         # last streaming is not successful
         if isinstance(history[-1], HumanMessage):
-            # after refresh page, user has different input
+            # after refresh page, user may have different input
             history[-1].content = request.user_message
         else:
             history.append(HumanMessage(content=request.user_message))
@@ -115,7 +115,7 @@ def prepare_chat_completion(
     # calculate max tokens left for completion
     messages_tokens = chat_model.get_num_tokens_from_messages(messages)
     max_size = OpenAI.modelname_to_contextsize(OpenAI, chat_completion.model)
-    chat_model.max_tokens = max_size - messages_tokens
+    chat_model.max_tokens = max_size - messages_tokens - 100
     return (chat_completion, chat_model, messages, db)
 
 
