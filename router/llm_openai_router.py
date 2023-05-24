@@ -41,7 +41,7 @@ def chat_with_stream(
     )
     if test_mode:
         return StreamingResponse(
-            generate_test_stream(messages),
+            generate_test_stream(str(messages)),
             media_type="text/event-stream",
         )
     else:
@@ -52,8 +52,10 @@ def chat_with_stream(
 
 
 @router.get("/completion-stream", response_class=StreamingResponse)
-def complete_with_stream(username: str, test_mode: bool, db: Session = Depends(get_db)):
-    llm, prompt = prepare_completion(username, db)
+def complete_with_stream(
+    completion_id: int, test_mode: bool, db: Session = Depends(get_db)
+):
+    llm, prompt = prepare_completion(completion_id, db)
     if test_mode:
         return StreamingResponse(
             generate_test_stream(prompt),

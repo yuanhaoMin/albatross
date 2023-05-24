@@ -24,6 +24,12 @@ def create_completion(
     return db_completion
 
 
+def read_completion(completion_id: int, db: Session) -> OpenAICompletion:
+    return (
+        db.query(OpenAICompletion).filter(OpenAICompletion.id == completion_id).first()
+    )
+
+
 def update_completion(
     completion_to_update: OpenAICompletion,
     prompt: str,
