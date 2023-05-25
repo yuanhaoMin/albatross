@@ -30,12 +30,14 @@ def create_update_chat_completion(
     user = get_user_by_username(request.username, db)
     update_time = get_current_berlin_time()
     if not len(user.chat_completions):
-        messages = [
-            SystemMessage(
-                content=request.system_message,
-            ),
-            HumanMessage(content=request.user_message),
-        ]
+        messages = []
+        if request.system_message:
+            messages.append(
+                SystemMessage(
+                    content=request.system_message,
+                )
+            )
+        messages.append(HumanMessage(content=request.user_message))
         return create_chat_completion(
             user_id=user.id,
             messages=str(messages),
