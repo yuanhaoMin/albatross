@@ -1,24 +1,20 @@
 import logging
 from fastapi import HTTPException
-from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
-from openai.error import Timeout
 from persistence.openai_chat_completion_crud import (
     create_chat_completion,
     delete_chat_completions,
     delete_chat_completion_by_id,
     read_chat_completion_by_id,
     update_chat_completion,
-    update_chat_completion_messages,
 )
 from persistence.openai_chat_completion_model import OpenAIChatCompletion
-from schema.event_data_schema import EventData
 from schema.openai_chat_completion_schema import UpdateChatCompletionRequest
-from service.setting_service import get_api_key_settings
+from service.openai_completion_service import create_llm
 from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
-from typing import Tuple, Type
+from typing import List, Tuple, Type
 from util.time_util import get_current_berlin_time
 
 logger = logging.getLogger(__name__)
@@ -94,74 +90,16 @@ def delete_user_chat_completions(
 
 def prepare_chat_completion(
     chat_completion_id: int, db: Session
-) -> Tuple[OpenAIChatCompletion, ChatOpenAI, str, Session]:
+) -> Tuple[OpenAIChatCompletion, ChatOpenAI, List[BaseMessage]]:
     chat_completion = read_chat_completion_by_id(chat_completion_id, db)
     if chat_completion is None:
         raise HTTPException(
             status_code=400,
             detail=f"Chat completion with id {chat_completion_id} not found",
         )
-    messages = eval(chat_completion.messages)
-    # different models have different max_tokens
-    request_timeout = 1.5
-    if chat_completion.model == "gpt-4":
-        request_timeout = 3
-    chat_model = ChatOpenAI(
-        model_name=chat_completion.model,
+    chat_model = create_llm(
+        model_type=chat_completion.model,
         temperature=chat_completion.temperature,
-        openai_api_key=get_api_key_settings().openai_api_key,
-        request_timeout=request_timeout,
-        max_retries=1,
-        streaming=True,
+        prompt=chat_completion.messages,
     )
-    # calculate max tokens left for completion
-    messages_tokens = chat_model.get_num_tokens_from_messages(messages)
-    max_size = OpenAI.modelname_to_contextsize(OpenAI, chat_completion.model)
-    chat_model.max_tokens = max_size - messages_tokens - 100
-    return (chat_completion, chat_model, messages, db)
-
-
-def generate_chat_completion_stream(
-    chat_completion: OpenAIChatCompletion,
-    chat_model: ChatOpenAI,
-    messages: str,
-    db: Session,
-) -> str:
-    message_dicts, params = chat_model._create_message_dicts(messages, stop=None)
-    event_data = EventData()
-    contents = []
-    retry_count = 0
-    # TODO: the langchain retry logic is not working, need to fix it
-    while True:
-        try:
-            for stream_response in chat_model.completion_with_retry(
-                messages=message_dicts, **params
-            ):
-                delta = stream_response["choices"][0]["delta"]
-                finish_reason = stream_response["choices"][0]["finish_reason"]
-                if hasattr(delta, "content"):
-                    contents.append(delta.content)
-                    event_data.content = delta.content
-                    yield "data: %s\n\n" % event_data.json()
-                if finish_reason == "stop":
-                    full_response_text = "".join(contents)
-                    messages.append(AIMessage(content=full_response_text))
-                    update_chat_completion_messages(
-                        chat_completion_to_update=chat_completion,
-                        messages=str(messages),
-                        db=db,
-                    )
-                    # return the last message
-                    event_data.hasEnd = True
-                    yield "data: %s\n\n" % event_data.json()
-            break
-        except Timeout:
-            retry_count += 1
-            if retry_count > chat_model.max_retries:
-                raise HTTPException(
-                    status_code=504,
-                    detail=f"OpenAI API timeout after {chat_model.max_retries} retries",
-                )
-            else:
-                logger.error("OpenAI API timeout, retrying...")
-                continue
+    return (chat_completion, chat_model, eval(chat_completion.messages))

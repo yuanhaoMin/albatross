@@ -10,7 +10,8 @@ from schema.openai_chat_completion_schema import (
 )
 from service.openai_completion_service import (
     create_update_completion,
-    generate_completion_stream,
+    generate_stream_for_chat_model,
+    generate_stream,
     generate_test_stream,
     prepare_completion,
 )
@@ -18,7 +19,6 @@ from service.openai_chat_completion_service import (
     create_update_chat_completion,
     delete_user_chat_completions,
     delete_chat_completion,
-    generate_chat_completion_stream,
     prepare_chat_completion,
 )
 from sqlalchemy.orm import Session
@@ -36,7 +36,7 @@ router = APIRouter(
 def chat_with_stream(
     chat_completion_id: int, test_mode: bool, db: Session = Depends(get_db)
 ):
-    chat_completion, chat_model, messages, db = prepare_chat_completion(
+    chat_completion, chat_model, messages = prepare_chat_completion(
         chat_completion_id, db
     )
     if test_mode:
@@ -46,7 +46,7 @@ def chat_with_stream(
         )
     else:
         return StreamingResponse(
-            generate_chat_completion_stream(chat_completion, chat_model, messages, db),
+            generate_stream_for_chat_model(chat_completion, chat_model, messages, db),
             media_type="text/event-stream",
         )
 
@@ -63,7 +63,7 @@ def complete_with_stream(
         )
     else:
         return StreamingResponse(
-            generate_completion_stream(llm, prompt),
+            generate_stream(llm, prompt),
             media_type="text/event-stream",
         )
 

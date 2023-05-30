@@ -5,7 +5,7 @@ from typing import Optional
 
 
 class ModelType(str, Enum):
-    gpt_35b = "gpt-3.5-turbo"
+    gpt_35 = "gpt-3.5-turbo"
     gpt_4 = "gpt-4"
 
 

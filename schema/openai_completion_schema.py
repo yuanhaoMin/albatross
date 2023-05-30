@@ -5,6 +5,8 @@ from pydantic import BaseModel, Field
 
 class ModelType(str, Enum):
     davinci_3 = "text-davinci-003"
+    gpt_35 = "gpt-3.5-turbo"
+    gpt_4 = "gpt-4"
 
 
 class CompletionBase(BaseModel):
