@@ -1,6 +1,6 @@
-from configuration.constant import APIKey
 from langchain import OpenAI, SerpAPIWrapper
 from langchain.agents import AgentType, Tool, initialize_agent
+from service.setting_service import get_api_key_settings
 
 
 def online_search(question):
@@ -8,13 +8,13 @@ def online_search(question):
         model_name="text-davinci-003",
         temperature=0,
         max_tokens=1024,
-        openai_api_key=APIKey.OPENAI_API_KEY,
+        openai_api_key=get_api_key_settings().openai_api_key,
         request_timeout=2,
         max_retries=1,
         streaming=True,
     )
     search = SerpAPIWrapper(
-        serpapi_api_key=APIKey.SERPER_API_KEY,
+        serpapi_api_key=get_api_key_settings().serper_api_key,
         params={
             "engine": "google",
             "google_domain": "google.com",

@@ -2,6 +2,7 @@
 """
 google-search-results==2.4.2
 """
+import dotenv
 import openai
 import pyodbc
 import sqlalchemy

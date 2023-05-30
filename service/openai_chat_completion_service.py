@@ -1,5 +1,4 @@
 import logging
-from configuration.constant import APIKey
 from fastapi import HTTPException
 from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
@@ -16,6 +15,7 @@ from persistence.openai_chat_completion_crud import (
 from persistence.openai_chat_completion_model import OpenAIChatCompletion
 from schema.event_data_schema import EventData
 from schema.openai_chat_completion_schema import UpdateChatCompletionRequest
+from service.setting_service import get_api_key_settings
 from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
 from typing import Tuple, Type
@@ -109,7 +109,7 @@ def prepare_chat_completion(
     chat_model = ChatOpenAI(
         model_name=chat_completion.model,
         temperature=chat_completion.temperature,
-        openai_api_key=APIKey.OPENAI_API_KEY,
+        openai_api_key=get_api_key_settings().openai_api_key,
         request_timeout=request_timeout,
         max_retries=1,
         streaming=True,

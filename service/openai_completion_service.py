@@ -1,6 +1,4 @@
 import asyncio
-import json
-from configuration.constant import APIKey
 from langchain.llms import OpenAI
 from persistence.openai_completion_crud import (
     create_completion,
@@ -10,6 +8,7 @@ from persistence.openai_completion_crud import (
 from persistence.openai_completion_model import OpenAICompletion
 from schema.event_data_schema import EventData
 from schema.openai_completion_schema import UpdateCompletionRequest
+from service.setting_service import get_api_key_settings
 from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
 from typing import Tuple
@@ -46,7 +45,7 @@ def prepare_completion(completion_id: int, db: Session) -> Tuple[OpenAI, str]:
     llm = OpenAI(
         model_name=completion.model,
         temperature=completion.temperature,
-        openai_api_key=APIKey.OPENAI_API_KEY,
+        openai_api_key=get_api_key_settings().openai_api_key,
         request_timeout=2,
         max_retries=1,
         streaming=True,
