@@ -1,7 +1,6 @@
 import logging
 from fastapi import APIRouter, HTTPException
-from openai.error import Timeout
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from service import openai_agent_service
 
 logger = logging.getLogger(__name__)
@@ -14,19 +13,19 @@ router = APIRouter(
 
 
 class AgentOpenAIOnlineSearchRequest(BaseModel):
-    question: str
+    question: str = Field(min_length=1)
 
 
 @router.post("/openai/online-search")
 def openai_search_online(request: AgentOpenAIOnlineSearchRequest):
-    if not request.question:
-        raise HTTPException(status_code=400, detail="Question must not be empty")
     try:
         (final_answer, intermediate_steps) = openai_agent_service.online_search(
             request.question
         )
-    except Timeout as e:
-        logger.error("OpenAI API timeout, retrying...")
+    # OpenAI throw either Timeout or RateLimit error on read time out
+    except Exception as e:
+        exception_name = e.__class__.__name__
+        logger.error("Error in openai_search_online: " + exception_name)
         (final_answer, intermediate_steps) = openai_agent_service.online_search(
             request.question
         )

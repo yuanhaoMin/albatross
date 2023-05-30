@@ -1,7 +1,7 @@
 import logging
 from fastapi import HTTPException
 from langchain.chat_models import ChatOpenAI
-from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain.schema import BaseMessage, HumanMessage, SystemMessage
 from persistence.openai_chat_completion_crud import (
     create_chat_completion,
     delete_chat_completions,

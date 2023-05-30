@@ -146,15 +146,28 @@ def generate_stream_for_chat_model(
 
 
 def generate_stream_for_completion_model(llm: OpenAI, prompt: str) -> str:
-    for stream_response in llm.stream(prompt):
-        event_data = EventData()
-        event_data.content = stream_response["choices"][0]["text"]
-        finish_reason = stream_response["choices"][0]["finish_reason"]
-        if finish_reason == "stop":
-            event_data.hasEnd = True
-            yield "data: %s\n\n" % event_data.json()
-        else:
-            yield "data: %s\n\n" % event_data.json()
+    event_data = EventData()
+    retry_count = 0
+    while True:
+        try:
+            for stream_response in llm.stream(prompt):
+                event_data.content = stream_response["choices"][0]["text"]
+                finish_reason = stream_response["choices"][0]["finish_reason"]
+                if finish_reason == "stop":
+                    event_data.hasEnd = True
+                    yield "data: %s\n\n" % event_data.json()
+                else:
+                    yield "data: %s\n\n" % event_data.json()
+        except Timeout:
+            retry_count += 1
+            if retry_count > llm.max_retries:
+                raise HTTPException(
+                    status_code=504,
+                    detail=f"OpenAI API timeout after {llm.max_retries} retries",
+                )
+            else:
+                logger.error("OpenAI API timeout, retrying...")
+                continue
 
 
 def generate_stream(llm: Union[OpenAI, ChatOpenAI], prompt: str) -> str:
