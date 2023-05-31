@@ -1,7 +1,9 @@
 import logging
 from fastapi import HTTPException
 from langchain.chat_models import ChatOpenAI
-from langchain.schema import BaseMessage, HumanMessage, SystemMessage
+
+# Do not delete AIMessage, It is needed implicitly when eval messages
+from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from persistence.openai_chat_completion_crud import (
     create_chat_completion,
     delete_chat_completions,
