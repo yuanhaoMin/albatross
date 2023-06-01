@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 def create_completion(
     user_id: int,
     prompt: str,
+    prompt_template: str,
+    template_args: str,
     model: str,
     temperature: float,
     update_time: datetime,
@@ -14,6 +16,8 @@ def create_completion(
     db_completion = OpenAICompletion(
         user_id=user_id,
         prompt=prompt,
+        prompt_template=prompt_template,
+        template_args=template_args,
         model=model,
         temperature=temperature,
         update_time=update_time,
@@ -33,12 +37,16 @@ def read_completion(completion_id: int, db: Session) -> OpenAICompletion:
 def update_completion(
     completion_to_update: OpenAICompletion,
     prompt: str,
+    prompt_template: str,
+    template_args: str,
     model: str,
     temperature: float,
     update_time: datetime,
     db: Session,
 ) -> OpenAICompletion:
     completion_to_update.prompt = prompt
+    completion_to_update.prompt_template = prompt_template
+    completion_to_update.template_args = template_args
     completion_to_update.model = model
     completion_to_update.temperature = temperature
     completion_to_update.update_time = update_time

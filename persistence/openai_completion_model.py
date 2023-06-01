@@ -8,6 +8,8 @@ class OpenAICompletion(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("app_user.id"))
     prompt = Column(NVARCHAR)
+    prompt_template = Column(NVARCHAR)
+    template_args = Column(NVARCHAR)
     model = Column(String)
     temperature = Column(Float)
     update_time = Column(TIMESTAMP)

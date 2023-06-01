@@ -1,6 +1,6 @@
 import logging
 from fastapi import HTTPException
-from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatOpenAI, openai
 
 # Do not delete AIMessage, It is needed implicitly when eval messages
 from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
@@ -12,7 +12,10 @@ from persistence.openai_chat_completion_crud import (
     update_chat_completion,
 )
 from persistence.openai_chat_completion_model import OpenAIChatCompletion
-from schema.openai_chat_completion_schema import UpdateChatCompletionRequest
+from schema.openai_chat_completion_schema import (
+    UpdateChatCompletionRequest,
+    GetChatCompletionHistoryResponse,
+)
 from service.openai_completion_service import create_llm
 from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
@@ -56,7 +59,7 @@ def create_update_chat_completion(
         if chat_completion_to_update is None:
             raise HTTPException(
                 status_code=400,
-                detail=f"Chat completion with id {request.chat_completion_id} not found",
+                detail=f"Chat completion not found",
             )
         history: Type[list[BaseMessage]] = eval(chat_completion_to_update.messages)
         # last streaming is not successful
@@ -88,6 +91,27 @@ def delete_user_chat_completions(
 ) -> None:
     user = get_user_by_username(username, db)
     delete_chat_completions(user.chat_completions, db)
+
+
+# TODO: implement one user with multiple chat history
+def get_user_last_chat_completion_history(
+    username: str,
+    db: Session,
+) -> GetChatCompletionHistoryResponse:
+    user = get_user_by_username(username, db)
+    chat_completion: Type[OpenAIChatCompletion] = user.chat_completions[-1]
+    if chat_completion is None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Chat completion not found",
+        )
+    messages = eval(chat_completion.messages)
+    message_dicts = [openai._convert_message_to_dict(m) for m in messages]
+    return GetChatCompletionHistoryResponse(
+        id=chat_completion.id,
+        messages=message_dicts,
+        update_time=chat_completion.update_time,
+    )
 
 
 def prepare_chat_completion(

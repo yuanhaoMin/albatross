@@ -5,22 +5,12 @@ from schema.openai_completion_schema import (
     UpdateCompletionResponse,
 )
 from schema.openai_chat_completion_schema import (
+    GetChatCompletionHistoryResponse,
     UpdateChatCompletionRequest,
     UpdateChatCompletionResponse,
 )
-from service.openai_completion_service import (
-    create_update_completion,
-    generate_stream_for_chat_model,
-    generate_stream,
-    generate_test_stream,
-    prepare_completion,
-)
-from service.openai_chat_completion_service import (
-    create_update_chat_completion,
-    delete_user_chat_completions,
-    delete_chat_completion,
-    prepare_chat_completion,
-)
+from service import openai_completion_service
+from service import openai_chat_completion_service
 from sqlalchemy.orm import Session
 from util.db_util import get_db
 
@@ -33,49 +23,60 @@ router = APIRouter(
 
 
 @router.get("/chat-completion-stream", response_class=StreamingResponse)
-def chat_with_stream(
+def stream_chat_completion(
     chat_completion_id: int, test_mode: bool, db: Session = Depends(get_db)
 ):
-    chat_completion, chat_model, messages = prepare_chat_completion(
-        chat_completion_id, db
-    )
+    (
+        chat_completion,
+        chat_model,
+        messages,
+    ) = openai_chat_completion_service.prepare_chat_completion(chat_completion_id, db)
     if test_mode:
         return StreamingResponse(
-            generate_test_stream(str(messages)),
+            openai_completion_service.generate_test_stream(str(messages)),
             media_type="text/event-stream",
         )
     else:
         return StreamingResponse(
-            generate_stream_for_chat_model(chat_completion, chat_model, messages, db),
+            openai_completion_service.generate_stream_for_chat_model(
+                chat_completion, chat_model, messages, db
+            ),
             media_type="text/event-stream",
         )
 
 
 @router.get("/completion-stream", response_class=StreamingResponse)
-def complete_with_stream(
+def stream_completion(
     completion_id: int, test_mode: bool, db: Session = Depends(get_db)
 ):
-    llm, prompt = prepare_completion(completion_id, db)
+    llm, prompt = openai_completion_service.prepare_completion(completion_id, db)
     if test_mode:
         return StreamingResponse(
-            generate_test_stream(prompt),
+            openai_completion_service.generate_test_stream(prompt),
             media_type="text/event-stream",
         )
     else:
         return StreamingResponse(
-            generate_stream(llm, prompt),
+            openai_completion_service.generate_stream(llm, prompt),
             media_type="text/event-stream",
         )
 
 
 @router.delete("/chat-completion")
-def reset_user_chat_completions(username: str, db: Session = Depends(get_db)):
-    return delete_user_chat_completions(username, db)
+def delete_user_chat_completions(username: str, db: Session = Depends(get_db)):
+    return openai_chat_completion_service.delete_user_chat_completions(username, db)
 
 
 @router.delete("/chat-completion/{chat_completion_id}")
-def reset_chat_completion(chat_completion_id: int, db: Session = Depends(get_db)):
-    return delete_chat_completion(chat_completion_id, db)
+def delete_chat_completion(chat_completion_id: int, db: Session = Depends(get_db)):
+    return openai_chat_completion_service.delete_chat_completion(chat_completion_id, db)
+
+
+@router.get("/chat-completion", response_model=GetChatCompletionHistoryResponse)
+def get_user_last_chat_completion(username: str, db: Session = Depends(get_db)):
+    return openai_chat_completion_service.get_user_last_chat_completion_history(
+        username, db
+    )
 
 
 @router.put("/chat-completion", response_model=UpdateChatCompletionResponse)
@@ -83,7 +84,7 @@ def update_chat_completion(
     request: UpdateChatCompletionRequest,
     db: Session = Depends(get_db),
 ):
-    return create_update_chat_completion(request, db)
+    return openai_chat_completion_service.create_update_chat_completion(request, db)
 
 
 @router.put("/completion", response_model=UpdateCompletionResponse)
@@ -91,4 +92,4 @@ def update_completion(
     request: UpdateCompletionRequest,
     db: Session = Depends(get_db),
 ):
-    return create_update_completion(request, db)
+    return openai_completion_service.create_update_completion(request, db)
