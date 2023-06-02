@@ -1,6 +1,7 @@
 from datetime import datetime
 from persistence.openai_chat_completion_model import OpenAIChatCompletion
 from sqlalchemy.orm import Session
+from typing import List
 
 
 def create_chat_completion(
@@ -25,7 +26,7 @@ def create_chat_completion(
 
 
 def delete_chat_completions(
-    chat_completions: list[OpenAIChatCompletion],
+    chat_completions: List[OpenAIChatCompletion],
     db: Session,
 ) -> None:
     for chat_completion in chat_completions:

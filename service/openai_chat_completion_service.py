@@ -61,7 +61,7 @@ def create_update_chat_completion(
                 status_code=400,
                 detail=f"Chat completion not found",
             )
-        history: Type[list[BaseMessage]] = eval(chat_completion_to_update.messages)
+        history: Type[List[BaseMessage]] = eval(chat_completion_to_update.messages)
         # last streaming is not successful
         if isinstance(history[-1], HumanMessage):
             # after refresh page, user may have different input

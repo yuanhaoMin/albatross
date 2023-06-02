@@ -13,7 +13,7 @@ IF OBJECT_ID('dbo.openai_completion') IS NULL
         id INT IDENTITY(1,1) PRIMARY KEY,
         user_id INT UNIQUE,
         prompt NVARCHAR(MAX),
-        prompt_template NVARCHAR(MAX),
+        template_id INT,
         template_args NVARCHAR(MAX),
         model VARCHAR(255),
         temperature DECIMAL(3,2),

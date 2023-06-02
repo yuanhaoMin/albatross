@@ -3,6 +3,8 @@ import logging
 from fastapi import HTTPException
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
+
+# Do not delete SystemMessage, It is needed implicitly when eval messages
 from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from openai.error import Timeout
 from persistence.openai_chat_completion_crud import update_chat_completion_messages
@@ -14,11 +16,18 @@ from persistence.openai_completion_crud import (
 from persistence.openai_chat_completion_model import OpenAIChatCompletion
 from persistence.openai_completion_model import OpenAICompletion
 from schema.event_data_schema import EventData
-from schema.openai_completion_schema import ModelType, UpdateCompletionRequest
+from schema.openai_completion_schema import (
+    ModelType,
+    UpdateCompletionRequest,
+)
+
+# Do not delete TemplateArgs, It is needed implicitly when eval messages
+from schema.template_args_schema import TemplateArgs
+from service.prompt_template_service import generate_prompt_from_template
 from service.setting_service import get_api_key_settings
 from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
-from typing import List, Tuple, Union
+from typing import List, Tuple, Type, Union
 from util.time_util import get_current_berlin_time
 
 logger = logging.getLogger(__name__)
@@ -54,33 +63,60 @@ def create_llm(
         # calculate max tokens left for completion
         messages_tokens = llm.get_num_tokens_from_messages(eval(prompt))
         max_size = OpenAI.modelname_to_contextsize(self=OpenAI, modelname=model_type)
-        llm.max_tokens = max_size - messages_tokens - 50
+        max_tokens = max_size - messages_tokens - 50
+        if max_tokens < 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"The number of tokens in the prompt is greater than {max_size}",
+            )
+        llm.max_tokens = max_tokens
         return llm
+
+
+def determine_prompt_formate_by_model(model_type: ModelType, prompt: str) -> str:
+    if model_type == ModelType.davinci_3:
+        return prompt
+    else:
+        messages = [HumanMessage(content=prompt)]
+        return str(messages)
 
 
 def create_update_completion(
     request: UpdateCompletionRequest, db: Session
 ) -> OpenAICompletion:
     user = get_user_by_username(request.username, db)
-    update_time = get_current_berlin_time()
-    if request.model == ModelType.davinci_3:
-        prompt = request.prompt
+    completion_to_update: Type[OpenAICompletion] = user.completion
+    if (
+        completion_to_update is None
+        or request.template_id != completion_to_update.template_id
+    ):
+        existing_args = []
     else:
-        messages = [HumanMessage(content=request.prompt)]
-        prompt = str(messages)
-    if user.completion is None:
-        return create_completion(
-            user_id=user.id,
-            prompt=prompt,
-            model=request.model,
-            temperature=request.temperature,
-            update_time=update_time,
-            db=db,
-        )
+        existing_args = eval(completion_to_update.template_args)
+    update_time = get_current_berlin_time()
+    prompt = generate_prompt_from_template(
+        template_id=request.template_id,
+        existing_args=existing_args,
+        new_args=request.template_args,
+    )
+    formatted_prompt = determine_prompt_formate_by_model(request.model, prompt)
+    completion = OpenAICompletion(
+        user_id=user.id,
+        prompt=formatted_prompt,
+        template_id=request.template_id,
+        template_args=str(existing_args),
+        model=request.model,
+        temperature=request.temperature,
+        update_time=update_time,
+    )
+    if completion_to_update is None:
+        return create_completion(completion=completion, db=db)
     else:
         return update_completion(
-            completion_to_update=user.completion,
-            prompt=prompt,
+            completion_to_update=completion_to_update,
+            prompt=formatted_prompt,
+            template_id=request.template_id,
+            template_args=str(existing_args),
             model=request.model,
             temperature=request.temperature,
             update_time=update_time,
