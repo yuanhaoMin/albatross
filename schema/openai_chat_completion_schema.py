@@ -22,7 +22,7 @@ class ChatCompletionBase(BaseModel):
 class GetChatCompletionHistoryResponse(BaseModel):
     id: int
     messages: List[BaseMessage]
-    update_time: datetime
+    update_time: datetime = None
 
     class Config:
         orm_mode = True

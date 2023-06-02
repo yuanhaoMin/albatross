@@ -99,12 +99,13 @@ def get_user_last_chat_completion_history(
     db: Session,
 ) -> GetChatCompletionHistoryResponse:
     user = get_user_by_username(username, db)
-    chat_completion: Type[OpenAIChatCompletion] = user.chat_completions[-1]
-    if chat_completion is None:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Chat completion not found",
+    if not user.chat_completions:
+        return GetChatCompletionHistoryResponse(
+            id=-1,
+            messages=[],
+            update_time=None,
         )
+    chat_completion: Type[OpenAIChatCompletion] = user.chat_completions[-1]
     messages = eval(chat_completion.messages)
     message_dicts = [openai._convert_message_to_dict(m) for m in messages]
     return GetChatCompletionHistoryResponse(
