@@ -6,6 +6,16 @@ from typing import List
 class PromptTemplateEnum(Enum):
     DEFAULT = (0, prompt_template_content.default, {"question"})
     PDF_CHAT = (1, prompt_template_content.pdf_chat, {"pdf", "question"})
+    RESUME_SCREENING = (
+        10,
+        prompt_template_content.resume_screening,
+        {"pdf", "position_description"},
+    )
+    INTERVIEW_QUESTIONS = (
+        12,
+        prompt_template_content.interview_questions,
+        {"requirement"},
+    )
 
     def __init__(self, id: int, template: str, arg_names: List[str]):
         self.id = id
