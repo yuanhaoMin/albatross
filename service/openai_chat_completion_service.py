@@ -48,12 +48,14 @@ def create_update_chat_completion(
         if request.system_message:
             system_message_content = request.system_message
         # User want to use template
-        else:
+        elif request.template_args:
             system_message_content = generate_prompt_from_template(
                 template_id=request.template_id,
                 existing_args=existing_args,
                 new_args=request.template_args,
             )
+        else:
+            system_message_content = ""
         messages.append(
             SystemMessage(
                 content=system_message_content,
@@ -122,7 +124,10 @@ def get_user_template_chat_completion_history(
             messages=[],
             update_time=None,
         )
-    messages = eval(chat_completion.messages)
+    messages: Type[List[BaseMessage]] = eval(chat_completion.messages)
+    # Remove system message, which is the first message
+    if messages and isinstance(messages[0], SystemMessage):
+        messages = messages[1:]
     message_dicts = [openai._convert_message_to_dict(m) for m in messages]
     return GetChatCompletionHistoryResponse(
         id=chat_completion.id,
