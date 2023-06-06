@@ -12,6 +12,7 @@ from schema.openai_chat_completion_schema import (
 from service import openai_completion_service
 from service import openai_chat_completion_service
 from sqlalchemy.orm import Session
+from typing import Optional
 from util.db_util import get_db
 
 
@@ -73,9 +74,11 @@ def delete_chat_completion(chat_completion_id: int, db: Session = Depends(get_db
 
 
 @router.get("/chat-completion", response_model=GetChatCompletionHistoryResponse)
-def get_user_last_chat_completion(username: str, db: Session = Depends(get_db)):
-    return openai_chat_completion_service.get_user_last_chat_completion_history(
-        username, db
+def get_user_template_chat_completion_history(
+    username: str, template_id: Optional[int] = -1, db: Session = Depends(get_db)
+):
+    return openai_chat_completion_service.get_user_template_chat_completion_history(
+        username, template_id, db
     )
 
 

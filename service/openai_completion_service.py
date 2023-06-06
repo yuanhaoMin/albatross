@@ -60,7 +60,7 @@ def create_llm(
             max_retries=1,
             streaming=True,
         )
-        # calculate max tokens left for completion
+        # Calculate max tokens left for completion
         messages_tokens = llm.get_num_tokens_from_messages(eval(prompt))
         max_size = OpenAI.modelname_to_contextsize(self=OpenAI, modelname=model_type)
         max_tokens = max_size - messages_tokens - 50
@@ -100,16 +100,16 @@ def create_update_completion(
         new_args=request.template_args,
     )
     formatted_prompt = determine_prompt_formate_by_model(request.model, prompt)
-    completion = OpenAICompletion(
-        user_id=user.id,
-        prompt=formatted_prompt,
-        template_id=request.template_id,
-        template_args=str(existing_args),
-        model=request.model,
-        temperature=request.temperature,
-        update_time=update_time,
-    )
     if completion_to_update is None:
+        completion = OpenAICompletion(
+            user_id=user.id,
+            prompt=formatted_prompt,
+            template_id=request.template_id,
+            template_args=str(existing_args),
+            model=request.model,
+            temperature=request.temperature,
+            update_time=update_time,
+        )
         return create_completion(completion=completion, db=db)
     else:
         return update_completion(
@@ -165,7 +165,7 @@ def generate_stream_for_chat_model(
                             messages=str(messages),
                             db=db,
                         )
-                    # return the last message
+                    # Return the last message
                     event_data.hasEnd = True
                     yield "data: %s\n\n" % event_data.json()
             break

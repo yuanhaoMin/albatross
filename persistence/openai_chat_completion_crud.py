@@ -5,24 +5,13 @@ from typing import List
 
 
 def create_chat_completion(
-    user_id: int,
-    messages: str,
-    model: str,
-    temperature: float,
-    update_time: datetime,
+    chat_completion: OpenAIChatCompletion,
     db: Session,
 ) -> OpenAIChatCompletion:
-    db_completion = OpenAIChatCompletion(
-        user_id=user_id,
-        messages=messages,
-        model=model,
-        temperature=temperature,
-        update_time=update_time,
-    )
-    db.add(db_completion)
+    db.add(chat_completion)
     db.commit()
-    db.refresh(db_completion)
-    return db_completion
+    db.refresh(chat_completion)
+    return chat_completion
 
 
 def delete_chat_completions(
@@ -58,12 +47,16 @@ def read_chat_completion_by_id(
 def update_chat_completion(
     chat_completion_to_update: OpenAIChatCompletion,
     messages: str,
+    template_id: int,
+    template_args: str,
     model: str,
     temperature: float,
     update_time: datetime,
     db: Session,
 ) -> OpenAIChatCompletion:
     chat_completion_to_update.messages = messages
+    chat_completion_to_update.template_id = template_id
+    chat_completion_to_update.template_args = template_args
     chat_completion_to_update.model = model
     chat_completion_to_update.temperature = temperature
     chat_completion_to_update.update_time = update_time

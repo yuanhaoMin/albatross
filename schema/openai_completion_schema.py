@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field
 from schema.template_args_schema import TemplateArgs
-from typing import List, Optional
+from typing import List
 
 
 class ModelType(str, Enum):

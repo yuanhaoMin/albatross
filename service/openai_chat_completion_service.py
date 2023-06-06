@@ -16,7 +16,11 @@ from schema.openai_chat_completion_schema import (
     UpdateChatCompletionRequest,
     GetChatCompletionHistoryResponse,
 )
+
+# Do not delete TemplateArgs, It is needed implicitly when eval messages
+from schema.template_args_schema import TemplateArgs
 from service.openai_completion_service import create_llm
+from service.prompt_template_service import generate_prompt_from_template
 from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
 from typing import List, Tuple, Type
@@ -29,48 +33,56 @@ def create_update_chat_completion(
     request: UpdateChatCompletionRequest, db: Session
 ) -> OpenAIChatCompletion:
     user = get_user_by_username(request.username, db)
+    chat_completion_to_update: Type[OpenAIChatCompletion] = next(
+        (c for c in user.chat_completions if c.template_id == request.template_id),
+        None,
+    )
+    if chat_completion_to_update is None:
+        existing_args = []
+    else:
+        existing_args = eval(chat_completion_to_update.template_args)
     update_time = get_current_berlin_time()
-    if not len(user.chat_completions):
+    if not chat_completion_to_update:
         messages = []
+        # User want custimized system message
         if request.system_message:
-            messages.append(
-                SystemMessage(
-                    content=request.system_message,
-                )
+            system_message_content = request.system_message
+        # User want to use template
+        else:
+            system_message_content = generate_prompt_from_template(
+                template_id=request.template_id,
+                existing_args=existing_args,
+                new_args=request.template_args,
             )
+        messages.append(
+            SystemMessage(
+                content=system_message_content,
+            )
+        )
         messages.append(HumanMessage(content=request.user_message))
-        return create_chat_completion(
+        chat_completion = OpenAIChatCompletion(
             user_id=user.id,
             messages=str(messages),
+            template_id=request.template_id,
+            template_args=str(existing_args),
             model=request.model,
             temperature=request.temperature,
             update_time=update_time,
-            db=db,
         )
+        return create_chat_completion(chat_completion=chat_completion, db=db)
     else:
-        # chat_completion_to_update = next(
-        #     (c for c in user.chat_completions if c.id == request.chat_completion_id),
-        #     None,
-        # )
-        # TODO: implement one user with multiple chat history
-        chat_completion_to_update: Type[OpenAIChatCompletion] = user.chat_completions[
-            -1
-        ]
-        if chat_completion_to_update is None:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Chat completion not found",
-            )
         history: Type[List[BaseMessage]] = eval(chat_completion_to_update.messages)
-        # last streaming is not successful
+        # Last streaming is not successful
         if isinstance(history[-1], HumanMessage):
-            # after refresh page, user may have different input
+            # After refresh page, user may have different input
             history[-1].content = request.user_message
         else:
             history.append(HumanMessage(content=request.user_message))
         return update_chat_completion(
             chat_completion_to_update=chat_completion_to_update,
             messages=str(history),
+            template_id=request.template_id,
+            template_args=str(existing_args),
             model=request.model,
             temperature=request.temperature,
             update_time=update_time,
@@ -93,19 +105,23 @@ def delete_user_chat_completions(
     delete_chat_completions(user.chat_completions, db)
 
 
-# TODO: implement one user with multiple chat history
-def get_user_last_chat_completion_history(
+# TODO: add query parameter to filter by template_id
+def get_user_template_chat_completion_history(
     username: str,
+    template_id: int,
     db: Session,
 ) -> GetChatCompletionHistoryResponse:
     user = get_user_by_username(username, db)
-    if not user.chat_completions:
+    chat_completion: Type[OpenAIChatCompletion] = next(
+        (c for c in user.chat_completions if c.template_id == template_id),
+        None,
+    )
+    if not chat_completion:
         return GetChatCompletionHistoryResponse(
             id=-1,
             messages=[],
             update_time=None,
         )
-    chat_completion: Type[OpenAIChatCompletion] = user.chat_completions[-1]
     messages = eval(chat_completion.messages)
     message_dicts = [openai._convert_message_to_dict(m) for m in messages]
     return GetChatCompletionHistoryResponse(

@@ -4,6 +4,7 @@ from typing import List
 
 
 class PromptTemplateEnum(Enum):
+    NONE = (-1, "", {})
     DEFAULT = (0, prompt_template_content.default, {"question"})
     PDF_CHAT = (1, prompt_template_content.pdf_chat, {"pdf", "question"})
     RESUME_SCREENING = (
