@@ -1,7 +1,13 @@
 from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field
-from typing import Optional
+from schema.template_args_schema import TemplateArgs
+from typing import List, Optional
+
+
+class BaseMessage(BaseModel):
+    role: str
+    content: str
 
 
 class ModelType(str, Enum):
@@ -14,11 +20,22 @@ class ChatCompletionBase(BaseModel):
     temperature: float = Field(ge=0.0, le=2.0)
 
 
+class GetChatCompletionHistoryResponse(BaseModel):
+    id: int
+    messages: List[BaseMessage]
+    update_time: datetime = None
+
+    class Config:
+        orm_mode = True
+
+
 class UpdateChatCompletionRequest(ChatCompletionBase):
     username: str
     chat_completion_id: Optional[int] = None
     system_message: Optional[str] = ""
     user_message: str = Field(min_length=1)
+    template_id: Optional[int] = -1
+    template_args: Optional[List[TemplateArgs]] = []
 
 
 class UpdateChatCompletionResponse(ChatCompletionBase):

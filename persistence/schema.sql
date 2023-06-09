@@ -13,6 +13,8 @@ IF OBJECT_ID('dbo.openai_completion') IS NULL
         id INT IDENTITY(1,1) PRIMARY KEY,
         user_id INT UNIQUE,
         prompt NVARCHAR(MAX),
+        template_id INT,
+        template_args NVARCHAR(MAX),
         model VARCHAR(255),
         temperature DECIMAL(3,2),
         update_time DATETIME,
@@ -22,8 +24,10 @@ IF OBJECT_ID('dbo.openai_completion') IS NULL
 IF OBJECT_ID('dbo.openai_chat_completion') IS NULL
     CREATE TABLE openai_chat_completion (
         id INT IDENTITY(1,1) PRIMARY KEY,
-        user_id INT UNIQUE,
+        user_id INT,
         messages NVARCHAR(MAX),
+        template_id INT,
+        template_args NVARCHAR(MAX),
         model VARCHAR(255),
         temperature DECIMAL(3,2),
         update_time DATETIME,

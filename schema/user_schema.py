@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 
 class UserBase(BaseModel):
-    # validation will be inherited by subclasses
+    # Validation will be inherited by subclasses
     username: str = Field(min_length=3, max_length=40)
 
 

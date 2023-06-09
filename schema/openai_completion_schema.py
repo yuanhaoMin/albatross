@@ -1,6 +1,8 @@
 from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field
+from schema.template_args_schema import TemplateArgs
+from typing import List
 
 
 class ModelType(str, Enum):
@@ -16,7 +18,8 @@ class CompletionBase(BaseModel):
 
 class UpdateCompletionRequest(CompletionBase):
     username: str
-    prompt: str = Field(min_length=1)
+    template_id: int
+    template_args: List[TemplateArgs]
 
 
 class UpdateCompletionResponse(CompletionBase):
