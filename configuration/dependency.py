@@ -1,4 +1,4 @@
-# pipreqs ./ --force
+# pipreqs ./ --force --encoding=utf8
 """
 google-search-results==2.4.2
 python-multipart==0.0.6
