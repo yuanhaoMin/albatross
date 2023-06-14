@@ -28,7 +28,7 @@ from service.setting_service import get_api_key_settings
 from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
 from typing import List, Tuple, Type, Union
-from util.time_util import get_current_berlin_time
+from util.time_util import get_current_utc8_time
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ def create_update_completion(
         existing_args = []
     else:
         existing_args = eval(completion_to_update.template_args)
-    update_time = get_current_berlin_time()
+    update_time = get_current_utc8_time()
     prompt = generate_prompt_from_template(
         template_id=request.template_id,
         existing_args=existing_args,

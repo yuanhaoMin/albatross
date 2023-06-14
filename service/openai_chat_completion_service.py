@@ -24,7 +24,7 @@ from service.prompt_template_service import generate_prompt_from_template
 from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
 from typing import List, Tuple, Type
-from util.time_util import get_current_berlin_time
+from util.time_util import get_current_utc8_time
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def create_update_chat_completion(
         existing_args = []
     else:
         existing_args = eval(chat_completion_to_update.template_args)
-    update_time = get_current_berlin_time()
+    update_time = get_current_utc8_time()
     if not chat_completion_to_update:
         messages = []
         # User want custimized system message

@@ -6,6 +6,7 @@ IF OBJECT_ID('dbo.app_user') IS NULL
         access_bitmap INT NOT NULL,
         created_time DATETIME,
         last_login_time DATETIME,
+        subscription_end_time DATETIME,
     );
 
 IF OBJECT_ID('dbo.openai_completion') IS NULL

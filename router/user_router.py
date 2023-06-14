@@ -12,6 +12,13 @@ router = APIRouter(
 )
 
 
+@router.get("/info", response_model=user_schema.GetUserResponse)
+def get_user_info(
+    username: str, db: Session = Depends(get_db)
+) -> user_schema.GetUserResponse:
+    return user_service.get_user_by_username(username, db)
+
+
 @router.post("/login", response_model=user_schema.LoginUserResponse)
 def login_user(
     request: user_schema.LoginUserRequest, db: Session = Depends(get_db)

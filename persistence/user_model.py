@@ -17,6 +17,7 @@ class AppUser(Base):
     access_bitmap = Column(Integer, default=1)
     created_time = Column(TIMESTAMP)
     last_login_time = Column(TIMESTAMP)
+    subscription_end_time = Column(TIMESTAMP)
     # One-to-one relationship
     completion = relationship("OpenAICompletion", uselist=False, backref="app_user")
     # One-to-many relationship

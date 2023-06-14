@@ -6,8 +6,8 @@ from service import openai_agent_service
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
-    prefix="/agent",
-    tags=["agent"],
+    prefix="/agent/openai",
+    tags=["agent openai"],
     responses={404: {"description": "Not found"}},
 )
 
@@ -16,8 +16,8 @@ class AgentOpenAIOnlineSearchRequest(BaseModel):
     question: str = Field(min_length=1)
 
 
-@router.post("/openai/online-search")
-def openai_search_online(request: AgentOpenAIOnlineSearchRequest):
+@router.post("/online-search")
+def search_online(request: AgentOpenAIOnlineSearchRequest):
     try:
         (final_answer, intermediate_steps) = openai_agent_service.online_search(
             request.question
