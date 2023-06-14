@@ -5,13 +5,13 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chat_models import ChatOpenAI
 
 chat_model = ChatOpenAI(
-      model_name="gpt-3.5-turbo",
-      temperature=0,
-      openai_api_key="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",
-      request_timeout=30,
-      max_retries=1,
-      streaming=True,
-  )
+    model_name="gpt-3.5-turbo",
+    temperature=0,
+    openai_api_key="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",
+    request_timeout=30,
+    max_retries=1,
+    streaming=True,
+)
 # 单个csv文件
 df = pd.read_csv("./util/商业智能BI案例数据.csv")
 agent = create_pandas_dataframe_agent(chat_model, df, verbose=True)

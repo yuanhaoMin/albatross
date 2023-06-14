@@ -1,19 +1,19 @@
 from langchain import OpenAI, SerpAPIWrapper
 from langchain.agents import AgentType, Tool, initialize_agent
+from langchain.chat_models import ChatOpenAI
 from service.setting_service import get_api_key_settings
 
 
 def online_search(question):
-    llm = OpenAI(
-        model_name="text-davinci-003",
+    llm = ChatOpenAI(
+        model_name="gpt-3.5-turbo-0613",
         temperature=0,
-        max_tokens=1024,
         openai_api_key=get_api_key_settings().openai_api_key,
         request_timeout=2,
         max_retries=1,
         streaming=True,
     )
-    search = SerpAPIWrapper(
+    search_wrapper = SerpAPIWrapper(
         serpapi_api_key=get_api_key_settings().serper_api_key,
         params={
             "engine": "google",
@@ -21,19 +21,33 @@ def online_search(question):
             "gl": "cn",
             "hl": "zh-cn",
         },
+        # params={
+        #     "engine": "bing",
+        #     "cc": "HK",
+        # },
     )
     tools = [
         Tool(
-            name="Google Search",
-            func=search.run,
-            description="Search Google for recent results",
-        )
+            name="Chinese",
+            func=search_wrapper.run,
+            description="useful for when you need to answer questions written in chinese. You should ask targeted questions",
+        ),
+        Tool(
+            name="Search",
+            func=search_wrapper.run,
+            description="useful for when you dont know the answer. You should ask targeted questions",
+        ),
+        Tool(
+            name="DateTime",
+            func=search_wrapper.run,
+            description="useful for when you need to answer questions related to date time. You should ask targeted questions",
+        ),
     ]
     agent = initialize_agent(
         tools=tools,
         llm=llm,
-        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-        max_iterations=5,
+        agent=AgentType.OPENAI_FUNCTIONS,
+        max_iterations=3,
         return_intermediate_steps=True,
         verbose=False,
     )
