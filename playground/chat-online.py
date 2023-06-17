@@ -1,6 +1,4 @@
-from langchain import (
-    SerpAPIWrapper,
-)
+from langchain.utilities import GoogleSerperAPIWrapper
 from langchain.agents import AgentType, initialize_agent, Tool
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import (
@@ -8,37 +6,34 @@ from langchain.schema import (
 )
 
 llm = ChatOpenAI(
-    model_name="gpt-3.5-turbo-0613",
+    model_name="gpt-3.5-turbo-16k",
     temperature=0,
     openai_api_key="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",
     request_timeout=2,
     max_retries=1,
     streaming=True,
 )
-search_wrapper = SerpAPIWrapper(
-    serpapi_api_key="da244df9ed10bbc6eeb85d2708a90435840da9c7904b3cf9a3883c44483a5090",
-    params={
-        "engine": "google",
-        "google_domain": "google.com",
-        "gl": "cn",
-        "hl": "zh-cn",
-    },
-    # params={
-    #     "engine": "bing",
-    #     "cc": "HK",
-    # },
+search_wrapper = GoogleSerperAPIWrapper(
+    serper_api_key="229ff3e91d7fb50b419ab802a6366c2ce823a079",
+    k=15,
+    gl="cn",
+    hl="zh-cn",
 )
-
 tools = [
+    Tool(
+        name="Chinese",
+        func=search_wrapper.run,
+        description="useful for when you need to answer questions written in chinese. You should ask targeted questions",
+    ),
     Tool(
         name="Search",
         func=search_wrapper.run,
         description="useful for when you dont know the answer. You should ask targeted questions",
     ),
     Tool(
-        name="Chinese",
+        name="DateTime",
         func=search_wrapper.run,
-        description="useful for when you need to answer questions written in chinese. You should ask targeted questions",
+        description="useful for when you need to answer questions related to date time. You should ask targeted questions",
     ),
 ]
 agent = initialize_agent(
@@ -47,9 +42,9 @@ agent = initialize_agent(
     agent=AgentType.OPENAI_FUNCTIONS,
     max_iterations=3,
     return_intermediate_steps=True,
-    verbose=False,
+    verbose=True,
 )
-output_data = agent.apply(["乾坤物联刘文涛"])
+output_data = agent.apply(["10家广东省UWB企业"])
 final_answer = output_data[0]["output"]
 intermediate_steps = output_data[0]["intermediate_steps"]
 print("intermediate steps: " + str(intermediate_steps))

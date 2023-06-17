@@ -1,6 +1,6 @@
-from langchain import OpenAI, SerpAPIWrapper
 from langchain.agents import AgentType, Tool, initialize_agent
 from langchain.chat_models import ChatOpenAI
+from langchain.utilities import GoogleSerperAPIWrapper
 from service.setting_service import get_api_key_settings
 
 
@@ -13,18 +13,11 @@ def online_search(question):
         max_retries=1,
         streaming=True,
     )
-    search_wrapper = SerpAPIWrapper(
-        serpapi_api_key=get_api_key_settings().serper_api_key,
-        params={
-            "engine": "google",
-            "google_domain": "google.com",
-            "gl": "cn",
-            "hl": "zh-cn",
-        },
-        # params={
-        #     "engine": "bing",
-        #     "cc": "HK",
-        # },
+    search_wrapper = GoogleSerperAPIWrapper(
+        serper_api_key=get_api_key_settings().serper_api_key,
+        k=15,
+        gl="cn",
+        hl="zh-cn",
     )
     tools = [
         Tool(
