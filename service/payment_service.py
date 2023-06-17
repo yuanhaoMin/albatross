@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from persistence import user_crud
 from schema import payment_schema
 from service import user_service
+from service.setting_service import get_alipay_settings
 from sqlalchemy.orm import Session
-from util.time_util import get_current_utc8_time
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def alipay_generate_url(
     request: payment_schema.PaymentAlipayUrlRequest, db: Session
 ) -> payment_schema.PaymentAlipayUrlResponse:
-    dev_mode = True
+    dev_mode = get_alipay_settings().alipay_dev_mode
     alipay = get_alipay_object(dev_mode)
     user = user_service.get_user_by_username(request.username, db)
     current_date_str = datetime.now().strftime("%Y%m%d%H%M%S")

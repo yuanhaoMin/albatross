@@ -3,14 +3,24 @@ from alipay.utils import AliPayConfig
 
 
 def get_alipay_object(dev_mode: bool):
-    app_private_key_string = open(
-        "./configuration/alipay_app_private_key_RSA2048.txt"
-    ).read()
-    alipay_public_key_string = open(
-        "./configuration/alipay_public_key_RSA2048.txt"
-    ).read()
+    if dev_mode:
+        app_id = "9021000122685934"
+        app_private_key_string = open(
+            "./configuration/dev_alipay_app_private_key_RSA2048.txt"
+        ).read()
+        alipay_public_key_string = open(
+            "./configuration/dev_alipay_public_key_RSA2048.txt"
+        ).read()
+    else:
+        app_id = "2021004101645132"
+        app_private_key_string = open(
+            "./configuration/alipay_app_private_key_RSA2048.txt"
+        ).read()
+        alipay_public_key_string = open(
+            "./configuration/alipay_public_key_RSA2048.txt"
+        ).read()
     alipay = AliPay(
-        appid="9021000122685934",
+        appid=app_id,
         # 默认回调 url
         app_notify_url=None,
         app_private_key_string=app_private_key_string,
