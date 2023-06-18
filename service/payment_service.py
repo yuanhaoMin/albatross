@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from persistence import user_crud
 from schema import payment_schema
 from service import user_service
-from service.setting_service import get_alipay_settings
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
@@ -14,8 +13,7 @@ logger = logging.getLogger(__name__)
 def alipay_generate_url(
     request: payment_schema.PaymentAlipayUrlRequest, db: Session
 ) -> payment_schema.PaymentAlipayUrlResponse:
-    dev_mode = get_alipay_settings().alipay_dev_mode
-    alipay = get_alipay_object(dev_mode)
+    alipay = get_alipay_object(request.dev_mode)
     user = user_service.get_user_by_username(request.username, db)
     current_date_str = datetime.now().strftime("%Y%m%d%H%M%S")
     # 14 digits of current time + user id
@@ -27,7 +25,7 @@ def alipay_generate_url(
         return_url="https://albatross21python.azurewebsites.net/payment/alipay/success",  # 支付成功后会跳转的页面
         notify_url="https://albatross21python.azurewebsites.net/payment/alipay/notify",  # 回调地址，支付成功后支付宝会向这个地址发送post请求
     )
-    if dev_mode:
+    if request.dev_mode:
         gataway = "https://openapi-sandbox.dl.alipaydev.com/gateway.do?"
     else:
         gataway = "https://openapi.alipay.com/gateway.do?"
