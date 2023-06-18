@@ -1,5 +1,5 @@
 import PyPDF2
-from fastapi import File, HTTPException
+from fastapi import HTTPException
 from io import BytesIO
 from schema.openai_completion_schema import UpdateCompletionRequest
 from schema.template_args_schema import TemplateArgs

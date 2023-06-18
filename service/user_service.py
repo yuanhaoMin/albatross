@@ -46,7 +46,7 @@ def register_user(request: user_schema.RegisterUserRequest, db: Session) -> AppU
 def update_user_subscription_end_time(
     id: int, subscription_end_time: datetime, db: Session
 ) -> AppUser:
-    return user_crud.update_user_subscription_end_time(
+    return user_crud.update_user_subscription(
         id=id,
         subscription_end_time=subscription_end_time,
         db=db,

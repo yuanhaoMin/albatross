@@ -1,5 +1,6 @@
 import logging
 from configuration.payment_alipay import get_alipay_object
+from constant.subscription_plan_enum import SubscriptionPlanEnum
 from datetime import datetime, timedelta
 from persistence import user_crud
 from schema import payment_schema
@@ -41,9 +42,13 @@ def alipay_get_success_info(
 ):
     user_id = out_trade_no[14:]
     user = user_crud.get_user_by_id(user_id, db)
-    subscription_end_time = user.subscription_end_time + timedelta(days=7)
-    user_crud.update_user_subscription_end_time(
+    subscription_plan = SubscriptionPlanEnum.from_price(int(total_amount))
+    subscription_end_time = user.subscription_end_time + timedelta(
+        days=31 * subscription_plan.month
+    )
+    user_crud.update_user_subscription(
         id=user.id,
+        access_bitmap=subscription_plan.access_bitmap,
         subscription_end_time=subscription_end_time,
         db=db,
     )

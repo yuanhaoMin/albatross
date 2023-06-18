@@ -48,10 +48,11 @@ def update_user_last_login(id: int, last_login_time: datetime, db: Session) -> A
     return db_user
 
 
-def update_user_subscription_end_time(
-    id: int, subscription_end_time: datetime, db: Session
+def update_user_subscription(
+    id: int, access_bitmap, subscription_end_time: datetime, db: Session
 ) -> AppUser:
     db_user = db.query(AppUser).filter(AppUser.id == id).first()
+    db_user.access_bitmap = access_bitmap
     db_user.subscription_end_time = subscription_end_time
     db.commit()
     db.refresh(db_user)

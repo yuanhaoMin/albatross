@@ -9,6 +9,7 @@ class UserBase(BaseModel):
 
 class GetUserResponse(UserBase):
     id: int
+    access_bitmap: int
     created_time: datetime
     last_login_time: datetime
     subscription_end_time: datetime
