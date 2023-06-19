@@ -19,6 +19,7 @@ from schema.openai_chat_completion_schema import (
 
 # Do not delete TemplateArgs, It is needed implicitly when eval messages
 from schema.template_args_schema import TemplateArgs
+from service.filter_service import openai_check_harmful_content
 from service.openai_completion_service import create_llm
 from service.prompt_template_service import generate_prompt_from_template
 from service.user_service import get_user_by_username
@@ -32,6 +33,8 @@ logger = logging.getLogger(__name__)
 def create_update_chat_completion(
     request: UpdateChatCompletionRequest, db: Session
 ) -> OpenAIChatCompletion:
+    openai_check_harmful_content(request.user_message)
+
     user = get_user_by_username(request.username, db)
     chat_completion_to_update: Type[OpenAIChatCompletion] = next(
         (c for c in user.chat_completions if c.template_id == request.template_id),

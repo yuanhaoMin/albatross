@@ -8,7 +8,7 @@ def openai_check_harmful_content(message: str) -> bool:
     openai.api_key = get_api_key_settings().openai_api_key
     functions = [
         {
-            "name": "is_input_harmful",
+            "name": "check_harmful_content",
             "description": "Predict if the input is related to political/violent/sexual",
             "parameters": {
                 "type": "object",
@@ -26,13 +26,10 @@ def openai_check_harmful_content(message: str) -> bool:
         model="gpt-3.5-turbo-0613",
         messages=[{"role": "user", "content": message}],
         functions=functions,
-        function_call="auto",
+        function_call={"name": "check_harmful_content"},
         timeout=3,
     )
-    if response["choices"][0]["finish_reason"] == "function_call":
-        data = json.loads(
-            response["choices"][0]["message"]["function_call"]["arguments"]
-        )
-        is_harmful = bool(data["result"])
-        if is_harmful:
-            raise HTTPException(status_code=418, detail="Harmful content detected")
+    data = json.loads(response["choices"][0]["message"]["function_call"]["arguments"])
+    is_harmful = bool(data["result"])
+    if is_harmful:
+        raise HTTPException(status_code=418, detail="Harmful content detected")
