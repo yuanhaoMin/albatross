@@ -1,6 +1,7 @@
 from datetime import datetime
 from persistence.user_model import AppUser
 from sqlalchemy.orm import Session
+from typing import Type
 
 
 def create_user(
@@ -22,22 +23,28 @@ def create_user(
     return db_user
 
 
+def delete_user_by_username(username: str, db: Session) -> None:
+    db_user: Type[AppUser] = (
+        db.query(AppUser).filter(AppUser.username == username).first()
+    )
+    if db_user:
+        # delete the related completion entry
+        if db_user.completion:
+            db.delete(db_user.completion)
+        # delete the related chat completion entries
+        for chat_completion in db_user.chat_completions:
+            db.delete(chat_completion)
+        # delete the user entry
+        db.delete(db_user)
+        db.commit()
+
+
 def get_user_by_id(id: int, db: Session) -> AppUser:
     return db.query(AppUser).filter(AppUser.id == id).first()
 
 
 def get_user_by_username(username: str, db: Session) -> AppUser:
     return db.query(AppUser).filter(AppUser.username == username).first()
-
-
-def get_user_by_username_and_password(
-    username: str, password: str, db: Session
-) -> AppUser:
-    return (
-        db.query(AppUser)
-        .filter(AppUser.username == username, AppUser.password == password)
-        .first()
-    )
 
 
 def update_user_last_login(id: int, last_login_time: datetime, db: Session) -> AppUser:

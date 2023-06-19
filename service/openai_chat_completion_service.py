@@ -37,31 +37,12 @@ def create_update_chat_completion(
         (c for c in user.chat_completions if c.template_id == request.template_id),
         None,
     )
-    if chat_completion_to_update is None:
-        existing_args = []
-    else:
-        existing_args = eval(chat_completion_to_update.template_args)
+    existing_args = []
+    messages = []
     update_time = get_current_utc8_time()
-    if not chat_completion_to_update:
-        messages = []
-        # User want custimized system message
-        if request.system_message:
-            system_message_content = request.system_message
-        # User want to use template
-        elif request.template_args:
-            system_message_content = generate_prompt_from_template(
-                template_id=request.template_id,
-                existing_args=existing_args,
-                new_args=request.template_args,
-            )
-        else:
-            system_message_content = ""
-        messages.append(
-            SystemMessage(
-                content=system_message_content,
-            )
-        )
-        messages.append(HumanMessage(content=request.user_message))
+    if chat_completion_to_update is None:
+        system_message = generate_system_message(request=request, existing_args=[])
+        messages = [system_message, HumanMessage(content=request.user_message)]
         chat_completion = OpenAIChatCompletion(
             user_id=user.id,
             messages=str(messages),
@@ -73,16 +54,20 @@ def create_update_chat_completion(
         )
         return create_chat_completion(chat_completion=chat_completion, db=db)
     else:
-        history: Type[List[BaseMessage]] = eval(chat_completion_to_update.messages)
-        # Last streaming is not successful
-        if isinstance(history[-1], HumanMessage):
-            # After refresh page, user may have different input
-            history[-1].content = request.user_message
+        existing_args = eval(chat_completion_to_update.template_args)
+        messages: Type[List[BaseMessage]] = eval(chat_completion_to_update.messages)
+        if not messages:
+            system_message = generate_system_message(request=request, existing_args=[])
+            messages = [system_message, HumanMessage(content=request.user_message)]
         else:
-            history.append(HumanMessage(content=request.user_message))
+            if isinstance(messages[-1], HumanMessage):
+                # After refresh page, user may have different input
+                messages[-1].content = request.user_message
+            else:
+                messages.append(HumanMessage(content=request.user_message))
         return update_chat_completion(
             chat_completion_to_update=chat_completion_to_update,
-            messages=str(history),
+            messages=str(messages),
             template_id=request.template_id,
             template_args=str(existing_args),
             model=request.model,
@@ -104,7 +89,28 @@ def delete_user_chat_completions(
     db: Session,
 ) -> None:
     user = get_user_by_username(username, db)
-    delete_chat_completions(user.chat_completions, db)
+    # delete_chat_completions(user.chat_completions, db)
+    reset_chat_completions(user.chat_completions, db)
+
+
+def generate_system_message(
+    request: UpdateChatCompletionRequest,
+    existing_args: List[TemplateArgs],
+) -> str:
+    if request.system_message:
+        system_message_content = request.system_message
+    # User want to use template
+    elif request.template_args:
+        system_message_content = generate_prompt_from_template(
+            template_id=request.template_id,
+            existing_args=existing_args,
+            new_args=request.template_args,
+        )
+    else:
+        system_message_content = ""
+    return SystemMessage(
+        content=system_message_content,
+    )
 
 
 # TODO: add query parameter to filter by template_id
@@ -151,3 +157,19 @@ def prepare_chat_completion(
         prompt=chat_completion.messages,
     )
     return (chat_completion, chat_model, eval(chat_completion.messages))
+
+
+def reset_chat_completions(
+    chat_completions: List[OpenAIChatCompletion], db: Session
+) -> None:
+    for chat_completion in chat_completions:
+        update_chat_completion(
+            chat_completion_to_update=chat_completion,
+            messages="[]",
+            template_id=chat_completion.template_id,
+            template_args=chat_completion.template_args,
+            model=chat_completion.model,
+            temperature=chat_completion.temperature,
+            update_time=chat_completion.update_time,
+            db=db,
+        )

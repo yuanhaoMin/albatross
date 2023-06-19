@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import RedirectResponse
-from schema import payment_schema
+from schema.payment_schema import PaymentAlipayUrlRequest, PaymentAlipayUrlResponse
 from service import payment_service
 from sqlalchemy.orm import Session
 from util.db_util import get_db
@@ -13,10 +13,10 @@ router = APIRouter(
 )
 
 
-@router.post("/alipay/url", response_model=payment_schema.PaymentAlipayUrlResponse)
+@router.post("/alipay/url", response_model=PaymentAlipayUrlResponse)
 def alipay_generate_url(
-    request: payment_schema.PaymentAlipayUrlRequest, db: Session = Depends(get_db)
-) -> payment_schema.PaymentAlipayUrlResponse:
+    request: PaymentAlipayUrlRequest, db: Session = Depends(get_db)
+) -> PaymentAlipayUrlResponse:
     return payment_service.alipay_generate_url(request, db)
 
 

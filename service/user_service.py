@@ -7,6 +7,10 @@ from sqlalchemy.orm import Session
 from util.time_util import get_current_utc8_time
 
 
+def delete_user_by_username(username: str, db: Session) -> AppUser:
+    return user_crud.delete_user_by_username(username=username, db=db)
+
+
 def get_user_by_username(username: str, db: Session) -> AppUser:
     user = user_crud.get_user_by_username(username=username, db=db)
     if user is None:
@@ -18,12 +22,11 @@ def get_user_by_username(username: str, db: Session) -> AppUser:
 
 
 def login_user(request: user_schema.LoginUserRequest, db: Session) -> AppUser:
-    user = user_crud.get_user_by_username_and_password(
+    user = user_crud.get_user_by_username(
         username=request.username,
-        password=request.password,
         db=db,
     )
-    if user is None:
+    if user is None or user.password != request.password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return user_crud.update_user_last_login(user.id, get_current_utc8_time(), db)
 

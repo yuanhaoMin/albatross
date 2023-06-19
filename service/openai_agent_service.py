@@ -4,7 +4,7 @@ from langchain.utilities import GoogleSerperAPIWrapper
 from service.setting_service import get_api_key_settings
 
 
-def online_search(question):
+def online_search(question: str) -> str:
     llm = ChatOpenAI(
         model_name="gpt-3.5-turbo-0613",
         temperature=0,
@@ -45,6 +45,4 @@ def online_search(question):
         verbose=False,
     )
     output_data = agent.apply([question])
-    final_answer = output_data[0]["output"]
-    intermediate_steps = output_data[0]["intermediate_steps"]
-    return (final_answer, intermediate_steps)
+    return output_data[0]["output"]

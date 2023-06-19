@@ -29,7 +29,7 @@ class SubscriptionPlanEnum(Enum):
     VIP_11 = (11, 1650, 15)
     VIP_12 = (12, 1680, 15)
 
-    LIFETIME = (25, 1688, 31)
+    LIFETIME = (999, 1688, 31)
 
     def __init__(self, month: int, price: int, access_bitmap: int):
         self.month = month

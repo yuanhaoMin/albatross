@@ -62,7 +62,7 @@ def create_llm(
         )
         # Calculate max tokens left for completion
         messages_tokens = llm.get_num_tokens_from_messages(eval(prompt))
-        max_size = OpenAI.modelname_to_contextsize(self=OpenAI, modelname=model_type)
+        max_size = OpenAI.modelname_to_contextsize(model_type)
         max_tokens = max_size - messages_tokens - 50
         if max_tokens < 0:
             raise HTTPException(

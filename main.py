@@ -21,7 +21,7 @@ middleware = [
         allow_headers=["*"],
     )
 ]
-app = FastAPI(middleware=middleware)
+app = FastAPI(docs_url=None, middleware=middleware, redoc_url=None)
 app.include_router(agent_openai_router.router)
 app.include_router(file_openai_router.router)
 app.include_router(llm_openai_router.router)
