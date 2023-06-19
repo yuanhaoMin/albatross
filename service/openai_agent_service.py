@@ -2,11 +2,13 @@ from langchain.agents import AgentType, Tool, initialize_agent
 from langchain.chat_models import ChatOpenAI
 from langchain.utilities import GoogleSerperAPIWrapper
 from service.setting_service import get_api_key_settings
+from service.filter_service import openai_check_harmful_content
 
 
 def online_search(question: str) -> str:
+    openai_check_harmful_content(question)
     llm = ChatOpenAI(
-        model_name="gpt-3.5-turbo-0613",
+        model_name="gpt-3.5-turbo",
         temperature=0,
         openai_api_key=get_api_key_settings().openai_api_key,
         request_timeout=2,

@@ -6,7 +6,7 @@ from langchain.schema import (
 )
 
 llm = ChatOpenAI(
-    model_name="gpt-3.5-turbo-16k",
+    model_name="gpt-3.5-turbo",
     temperature=0,
     openai_api_key="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",
     request_timeout=2,
