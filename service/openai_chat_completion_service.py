@@ -27,8 +27,6 @@ from sqlalchemy.orm import Session
 from typing import List, Tuple, Type
 from util.time_util import get_current_utc8_time
 
-logger = logging.getLogger(__name__)
-
 
 def create_update_chat_completion(
     request: UpdateChatCompletionRequest, db: Session
