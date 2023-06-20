@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from constant.openai_constant import OPENAI_TIMEOUT_MSG
 from fastapi import HTTPException
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
@@ -43,7 +44,7 @@ def create_llm(
             temperature=temperature,
             openai_api_key=get_api_key_settings().openai_api_key,
             request_timeout=2,
-            max_retries=1,
+            max_retries=2,
             streaming=True,
         )
         llm.max_tokens = llm.max_tokens_for_prompt(prompt=prompt)
@@ -58,7 +59,7 @@ def create_llm(
             temperature=temperature,
             openai_api_key=get_api_key_settings().openai_api_key,
             request_timeout=request_timeout,
-            max_retries=1,
+            max_retries=2,
             streaming=True,
         )
         # Calculate max tokens left for completion
@@ -146,6 +147,9 @@ def generate_stream_for_chat_model(
     event_data = EventData()
     contents = []
     retry_count = 0
+    timeout_log_message = OPENAI_TIMEOUT_MSG.format(
+        function_name=generate_stream_for_chat_model.__name__
+    )
     # TODO: the langchain retry logic is not working, need to fix it
     while True:
         try:
@@ -176,16 +180,19 @@ def generate_stream_for_chat_model(
             if retry_count > chat_model.max_retries:
                 raise HTTPException(
                     status_code=504,
-                    detail=f"OpenAI API timeout after {chat_model.max_retries} retries",
+                    detail=timeout_log_message,
                 )
             else:
-                logger.error("OpenAI API timeout, retrying...")
+                logger.error(timeout_log_message)
                 continue
 
 
 def generate_stream_for_completion_model(llm: OpenAI, prompt: str) -> str:
     event_data = EventData()
     retry_count = 0
+    timeout_log_message = OPENAI_TIMEOUT_MSG.format(
+        function_name=generate_stream_for_completion_model.__name__
+    )
     while True:
         try:
             for stream_response in llm.stream(prompt):
@@ -201,10 +208,10 @@ def generate_stream_for_completion_model(llm: OpenAI, prompt: str) -> str:
             if retry_count > llm.max_retries:
                 raise HTTPException(
                     status_code=504,
-                    detail=f"OpenAI API timeout after {llm.max_retries} retries",
+                    detail=timeout_log_message,
                 )
             else:
-                logger.error("OpenAI API timeout, retrying...")
+                logger.error(timeout_log_message)
                 continue
 
 
