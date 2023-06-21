@@ -15,16 +15,17 @@ def openai_check_harmful_content(message: str) -> None:
     functions = [
         {
             "name": "check_harmful_content",
-            "description": "Predict if the input is related to political/violent/sexual",
+            "description": "Access the level of correlation between the input and Chinese political, violent, or sexual content",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "result": {
-                        "type": "boolean",
-                        "description": "If the input is related to political/violent/sexual",
+                    "level": {
+                        "type": "string",
+                        "description": "The degree of the input's association with political, violent, or sexual content",
+                        "enum": ["none", "low", "high"],
                     }
                 },
-                "required": ["result"],
+                "required": ["level"],
             },
         }
     ]
@@ -45,8 +46,8 @@ def openai_check_harmful_content(message: str) -> None:
             data = json.loads(
                 response["choices"][0]["message"]["function_call"]["arguments"]
             )
-            is_harmful = bool(data["result"])
-            if is_harmful:
+            level = data["level"]
+            if level == "high":
                 raise HTTPException(status_code=418, detail="Harmful content detected")
             break
         except Timeout:
