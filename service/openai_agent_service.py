@@ -6,7 +6,7 @@ from service.filter_service import openai_check_harmful_content
 
 
 def online_search(question: str) -> str:
-    openai_check_harmful_content(question)
+    # openai_check_harmful_content(question)
     llm = ChatOpenAI(
         model_name="gpt-3.5-turbo-0613",
         temperature=0,

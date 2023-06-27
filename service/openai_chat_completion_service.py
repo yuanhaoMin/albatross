@@ -1,4 +1,3 @@
-import logging
 from fastapi import HTTPException
 from langchain.chat_models import ChatOpenAI, openai
 
@@ -31,7 +30,7 @@ from util.time_util import get_current_utc8_time
 def create_update_chat_completion(
     request: UpdateChatCompletionRequest, db: Session
 ) -> OpenAIChatCompletion:
-    openai_check_harmful_content(request.user_message)
+    # openai_check_harmful_content(request.user_message)
 
     user = get_user_by_username(request.username, db)
     chat_completion_to_update: Type[OpenAIChatCompletion] = next(

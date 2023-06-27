@@ -101,7 +101,7 @@ def create_update_completion(
         existing_args=existing_args,
         new_args=request.template_args,
     )
-    openai_check_harmful_content(prompt)
+    # openai_check_harmful_content(prompt)
     formatted_prompt = determine_prompt_formate_by_model(request.model, prompt)
     if completion_to_update is None:
         completion = OpenAICompletion(
