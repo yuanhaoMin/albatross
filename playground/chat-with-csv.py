@@ -1,7 +1,6 @@
 import calendar
 import pandas as pd
 from langchain.agents import create_csv_agent, create_pandas_dataframe_agent
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chat_models import ChatOpenAI
 
 chat_model = ChatOpenAI(

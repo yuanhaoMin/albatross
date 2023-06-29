@@ -27,7 +27,7 @@ search_wrapper = GoogleSerperAPIWrapper(
     hl="zh-cn",
 )
 
-question = "江泽民死亡日期"
+question = "今天日期"
 messages = [{"role": "user", "content": question}]
 argument_response = openai.ChatCompletion.create(
     model="gpt-3.5-turbo-0613",
