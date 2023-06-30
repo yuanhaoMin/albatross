@@ -183,7 +183,7 @@ def generate_stream_for_chat_model(
                     detail=timeout_log_message,
                 )
             else:
-                logger.warn(timeout_log_message)
+                logger.warning(timeout_log_message)
                 continue
 
 
@@ -211,7 +211,7 @@ def generate_stream_for_completion_model(llm: OpenAI, prompt: str) -> str:
                     detail=timeout_log_message,
                 )
             else:
-                logger.warn(timeout_log_message)
+                logger.warning(timeout_log_message)
                 continue
 
 

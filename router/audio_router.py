@@ -1,7 +1,6 @@
 import requests
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, UploadFile
 from service.setting_service import get_api_key_settings
-from typing import Annotated
 
 router = APIRouter(
     prefix="/audio",

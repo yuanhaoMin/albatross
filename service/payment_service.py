@@ -50,10 +50,10 @@ def alipay_get_success_info(
         subscription_end_time=subscription_end_time,
         db=db,
     )
-    logger.warn('用户"{}"支付宝支付{}元'.format(user.username, total_amount))
+    logger.warning('用户"{}"支付宝支付{}元'.format(user.username, total_amount))
     return "http://175.27.160.139/"
 
 
 def alipay_notify():
-    logger.warn("支付宝-回调成功")
+    logger.warning("支付宝-回调成功")
     return "回调成功"

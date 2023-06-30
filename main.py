@@ -3,6 +3,7 @@
 from fastapi import FastAPI
 from router import (
     agent_openai_router,
+    api_router,
     audio_router,
     file_openai_router,
     image_router,
@@ -24,6 +25,7 @@ middleware = [
 ]
 app = FastAPI(docs_url=None, middleware=middleware, redoc_url=None)
 app.include_router(agent_openai_router.router)
+app.include_router(api_router.router)
 app.include_router(audio_router.router)
 app.include_router(file_openai_router.router)
 app.include_router(image_router.router)

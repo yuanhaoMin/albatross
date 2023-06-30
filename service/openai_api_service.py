@@ -4,51 +4,54 @@ import openai
 from constant.openai_constant import OPENAI_TIMEOUT_MSG
 from fastapi import HTTPException
 from openai.error import Timeout
-from service.setting_service import get_api_key_settings
-
 
 logger = logging.getLogger(__name__)
 
 
-def openai_check_harmful_content(message: str) -> None:
-    openai.api_key = get_api_key_settings().openai_api_key
+def determine_api(prompt: str) -> str:
     functions = [
         {
-            "name": "check_harmful_content",
-            "description": "Access the level of correlation between the input and Chinese political, violent, or sexual content",
+            "name": "navigation",
+            "description": "导航至某个页面",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "level": {
+                    "type": {
                         "type": "string",
-                        "description": "The degree of the input's association with political, violent, or sexual content",
-                        "enum": ["none", "low", "high"],
+                        "description": "页面: 轨迹大屏, 数据大屏, 访客列表",
+                        "enum": ["data", "track", "visitor"],
                     }
                 },
-                "required": ["level"],
+                "required": ["type"],
             },
-        }
+        },
     ]
     max_retries = 2
     retry_count = 0
     timeout_log_message = OPENAI_TIMEOUT_MSG.format(
-        function_name=openai_check_harmful_content.__name__
+        function_name=determine_api.__name__
     )
     while True:
         try:
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo-0613",
-                messages=[{"role": "user", "content": message}],
+                messages=[{"role": "user", "content": prompt}],
                 functions=functions,
-                function_call={"name": "check_harmful_content"},
+                function_call={"name": "navigation"},
                 request_timeout=2,
             )
             data = json.loads(
                 response["choices"][0]["message"]["function_call"]["arguments"]
             )
-            level = data["level"]
-            if level == "high":
-                raise HTTPException(status_code=418, detail="Harmful content detected")
+            type = data["type"]
+            if type == "data":
+                return "visualizeData()"
+            elif type == "track":
+                return "visualizeTrack()"
+            elif type == "visitor":
+                return "visualizeVisitor()"
+            else:
+                raise HTTPException(status_code=500, detail="无法识别的页面类型")
             break
         except Timeout:
             retry_count += 1
