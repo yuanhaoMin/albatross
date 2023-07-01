@@ -1,3 +1,4 @@
+# .\venv\Scripts\activate
 # pip install --upgrade --force-reinstall -r requirements.txt
 # pipreqs ./ --force --encoding=utf8
 """
