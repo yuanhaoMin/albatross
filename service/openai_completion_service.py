@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from constant.openai_constant import OPENAI_TIMEOUT_MSG
 from fastapi import HTTPException
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
@@ -23,12 +24,13 @@ from schema.openai_completion_schema import (
 
 # Do not delete TemplateArgs, It is needed implicitly when eval messages
 from schema.template_args_schema import TemplateArgs
+from service.filter_service import openai_check_harmful_content
 from service.prompt_template_service import generate_prompt_from_template
 from service.setting_service import get_api_key_settings
 from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
 from typing import List, Tuple, Type, Union
-from util.time_util import get_current_berlin_time
+from util.time_util import get_current_utc8_time
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +44,7 @@ def create_llm(
             temperature=temperature,
             openai_api_key=get_api_key_settings().openai_api_key,
             request_timeout=2,
-            max_retries=1,
+            max_retries=2,
             streaming=True,
         )
         llm.max_tokens = llm.max_tokens_for_prompt(prompt=prompt)
@@ -57,12 +59,12 @@ def create_llm(
             temperature=temperature,
             openai_api_key=get_api_key_settings().openai_api_key,
             request_timeout=request_timeout,
-            max_retries=1,
+            max_retries=2,
             streaming=True,
         )
         # Calculate max tokens left for completion
         messages_tokens = llm.get_num_tokens_from_messages(eval(prompt))
-        max_size = OpenAI.modelname_to_contextsize(self=OpenAI, modelname=model_type)
+        max_size = OpenAI.modelname_to_contextsize(model_type)
         max_tokens = max_size - messages_tokens - 50
         if max_tokens < 0:
             raise HTTPException(
@@ -93,12 +95,13 @@ def create_update_completion(
         existing_args = []
     else:
         existing_args = eval(completion_to_update.template_args)
-    update_time = get_current_berlin_time()
+    update_time = get_current_utc8_time()
     prompt = generate_prompt_from_template(
         template_id=request.template_id,
         existing_args=existing_args,
         new_args=request.template_args,
     )
+    # openai_check_harmful_content(prompt)
     formatted_prompt = determine_prompt_formate_by_model(request.model, prompt)
     if completion_to_update is None:
         completion = OpenAICompletion(
@@ -144,6 +147,9 @@ def generate_stream_for_chat_model(
     event_data = EventData()
     contents = []
     retry_count = 0
+    timeout_log_message = OPENAI_TIMEOUT_MSG.format(
+        function_name=generate_stream_for_chat_model.__name__
+    )
     # TODO: the langchain retry logic is not working, need to fix it
     while True:
         try:
@@ -174,16 +180,19 @@ def generate_stream_for_chat_model(
             if retry_count > chat_model.max_retries:
                 raise HTTPException(
                     status_code=504,
-                    detail=f"OpenAI API timeout after {chat_model.max_retries} retries",
+                    detail=timeout_log_message,
                 )
             else:
-                logger.error("OpenAI API timeout, retrying...")
+                logger.warning(timeout_log_message)
                 continue
 
 
 def generate_stream_for_completion_model(llm: OpenAI, prompt: str) -> str:
     event_data = EventData()
     retry_count = 0
+    timeout_log_message = OPENAI_TIMEOUT_MSG.format(
+        function_name=generate_stream_for_completion_model.__name__
+    )
     while True:
         try:
             for stream_response in llm.stream(prompt):
@@ -199,10 +208,10 @@ def generate_stream_for_completion_model(llm: OpenAI, prompt: str) -> str:
             if retry_count > llm.max_retries:
                 raise HTTPException(
                     status_code=504,
-                    detail=f"OpenAI API timeout after {llm.max_retries} retries",
+                    detail=timeout_log_message,
                 )
             else:
-                logger.error("OpenAI API timeout, retrying...")
+                logger.warning(timeout_log_message)
                 continue
 
 

@@ -7,6 +7,17 @@ class UserBase(BaseModel):
     username: str = Field(min_length=3, max_length=40)
 
 
+class GetUserResponse(UserBase):
+    id: int
+    access_bitmap: int
+    created_time: datetime
+    last_login_time: datetime
+    subscription_end_time: datetime
+
+    class Config:
+        orm_mode = True
+
+
 class LoginUserRequest(UserBase):
     password: str
 
@@ -27,6 +38,7 @@ class RegisterUserRequest(UserBase):
 class RegisterUserResponse(UserBase):
     id: int
     created_time: datetime
+    subscription_end_time: datetime
 
     class Config:
         orm_mode = True
