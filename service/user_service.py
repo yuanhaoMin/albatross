@@ -40,6 +40,7 @@ def register_user(request: user_schema.RegisterUserRequest, db: Session) -> AppU
     return user_crud.create_user(
         username=request.username,
         password=request.password,
+        access_bitmap=15,
         created_time=created_time,
         subscription_end_time=subscription_end_time,
         db=db,

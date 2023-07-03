@@ -7,6 +7,7 @@ from typing import Type
 def create_user(
     username: str,
     password: str,
+    access_bitmap: int,
     created_time: datetime,
     subscription_end_time: datetime,
     db: Session,
@@ -14,6 +15,7 @@ def create_user(
     db_user = AppUser(
         username=username,
         password=password,
+        access_bitmap=access_bitmap,
         created_time=created_time,
         subscription_end_time=subscription_end_time,
     )
