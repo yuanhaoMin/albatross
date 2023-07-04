@@ -17,6 +17,11 @@ class PromptTemplateEnum(Enum):
         prompt_template_content.interview_questions,
         {"requirement"},
     )
+    BELBIN_TEAM_ROLES_POSITION_DESCRIPTION = (
+        14,
+        prompt_template_content.belbin_team_role_position_description,
+        {"position_description"},
+    )
 
     def __init__(self, id: int, template: str, arg_names: List[str]):
         self.id = id

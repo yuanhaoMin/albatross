@@ -5,7 +5,6 @@ from langchain.chat_models import ChatOpenAI, openai
 from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from persistence.openai_chat_completion_crud import (
     create_chat_completion,
-    delete_chat_completions,
     delete_chat_completion_by_id,
     read_chat_completion_by_id,
     update_chat_completion,
