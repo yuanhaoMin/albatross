@@ -1,6 +1,5 @@
 from constant import prompt_template_content
 from enum import Enum
-from typing import List
 
 
 class PromptTemplateEnum(Enum):
@@ -23,7 +22,7 @@ class PromptTemplateEnum(Enum):
         {"position_description"},
     )
 
-    def __init__(self, id: int, template: str, arg_names: List[str]):
+    def __init__(self, id: int, template: str, arg_names: list[str]):
         self.id = id
         self.template = template
         self.arg_names = arg_names

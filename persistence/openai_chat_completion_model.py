@@ -13,3 +13,4 @@ class OpenAIChatCompletion(Base):
     model = Column(String)
     temperature = Column(Float)
     update_time = Column(TIMESTAMP)
+    usage_count = Column(Integer)

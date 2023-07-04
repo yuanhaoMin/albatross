@@ -1,13 +1,12 @@
 from constant.prompt_template_enum import PromptTemplateEnum
 from langchain.prompts import PromptTemplate
 from schema.template_args_schema import TemplateArgs
-from typing import List
 
 
 def generate_prompt_from_template(
     template_id: int,
-    existing_args: List[TemplateArgs],
-    new_args: List[TemplateArgs],
+    existing_args: list[TemplateArgs],
+    new_args: list[TemplateArgs],
 ) -> str:
     prompt_template_enum = PromptTemplateEnum.from_id(template_id)
     prompt_template = PromptTemplate(

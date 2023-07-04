@@ -29,8 +29,7 @@ from service.prompt_template_service import generate_prompt_from_template
 from service.setting_service import get_api_key_settings
 from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
-from typing import List, Tuple, Type, Union
-from util.time_util import get_current_utc8_time
+from typing import Type, Union
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +94,6 @@ def create_update_completion(
         existing_args = []
     else:
         existing_args = eval(completion_to_update.template_args)
-    update_time = get_current_utc8_time()
     prompt = generate_prompt_from_template(
         template_id=request.template_id,
         existing_args=existing_args,
@@ -104,16 +102,15 @@ def create_update_completion(
     # openai_check_harmful_content(prompt)
     formatted_prompt = determine_prompt_formate_by_model(request.model, prompt)
     if completion_to_update is None:
-        completion = OpenAICompletion(
+        return create_completion(
             user_id=user.id,
             prompt=formatted_prompt,
             template_id=request.template_id,
             template_args=str(existing_args),
             model=request.model,
             temperature=request.temperature,
-            update_time=update_time,
+            db=db,
         )
-        return create_completion(completion=completion, db=db)
     else:
         return update_completion(
             completion_to_update=completion_to_update,
@@ -122,12 +119,12 @@ def create_update_completion(
             template_args=str(existing_args),
             model=request.model,
             temperature=request.temperature,
-            update_time=update_time,
+            usage_count=completion_to_update.usage_count + 1,
             db=db,
         )
 
 
-def prepare_completion(completion_id: int, db: Session) -> Tuple[OpenAI, str]:
+def prepare_completion(completion_id: int, db: Session) -> tuple[OpenAI, str]:
     completion = read_completion(completion_id, db)
     llm = create_llm(
         model_type=completion.model,
@@ -140,7 +137,7 @@ def prepare_completion(completion_id: int, db: Session) -> Tuple[OpenAI, str]:
 def generate_stream_for_chat_model(
     chat_completion: OpenAIChatCompletion,
     chat_model: ChatOpenAI,
-    messages: List[BaseMessage],
+    messages: list[BaseMessage],
     db: Session,
 ) -> str:
     message_dicts, params = chat_model._create_message_dicts(messages, stop=None)
@@ -219,7 +216,7 @@ def generate_stream(llm: Union[OpenAI, ChatOpenAI], prompt: str) -> str:
     if isinstance(llm, OpenAI):
         return generate_stream_for_completion_model(llm=llm, prompt=prompt)
     else:
-        messages: List[BaseMessage] = eval(prompt)
+        messages: list[BaseMessage] = eval(prompt)
         return generate_stream_for_chat_model(
             chat_completion=None, chat_model=llm, messages=messages, db=None
         )
