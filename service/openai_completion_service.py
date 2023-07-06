@@ -24,7 +24,7 @@ from schema.openai_completion_schema import (
 
 # Do not delete TemplateArgs, It is needed implicitly when eval messages
 from schema.template_args_schema import TemplateArgs
-from service.filter_service import openai_check_harmful_content
+from service.filter_service import check_for_sensitive_words
 from service.prompt_template_service import generate_prompt_from_template
 from service.setting_service import get_api_key_settings
 from service.user_service import get_user_by_username
@@ -99,7 +99,7 @@ def create_update_completion(
         existing_args=existing_args,
         new_args=request.template_args,
     )
-    # openai_check_harmful_content(prompt)
+    check_for_sensitive_words(prompt)
     formatted_prompt = determine_prompt_formate_by_model(request.model, prompt)
     if completion_to_update is None:
         return create_completion(

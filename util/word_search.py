@@ -1,17 +1,3 @@
-#!/usr/bin/env python
-# -*- coding:utf-8 -*-
-# ToolGood.Words.WordsSearch.py
-# 2020, Lin Zhijun, https://github.com/toolgood/ToolGood.Words
-# Licensed under the Apache License 2.0
-# 更新日志
-# 2020.04.06 第一次提交
-# 2020.05.16 修改，支持大于0xffff的字符
-
-__all__ = ["WordsSearch"]
-__author__ = "Lin Zhijun"
-__date__ = "2020.05.16"
-
-
 class TrieNode:
     def __init__(self):
         self.Index = 0
@@ -262,15 +248,3 @@ class WordsSearch:
                         result[j] = replaceChar
             ptr = tn
         return "".join(result)
-
-
-if __name__ == "__main__":
-    with open(file="./util/sensitive-words.txt", mode="r", encoding="utf-8") as fp:
-        sensitive_words = fp.read().splitlines()
-
-    search = WordsSearch()
-    search.SetKeywords(sensitive_words)
-
-    test = "javascript"
-    result = search.ContainsAny(test)
-    print(result)
