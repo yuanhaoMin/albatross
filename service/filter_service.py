@@ -4,7 +4,7 @@ import openai
 from constant.openai_constant import OPENAI_TIMEOUT_MSG
 from fastapi import HTTPException
 from openai.error import Timeout
-from service.setting_service import get_api_key_settings
+from service.setting_service import get_open_ai_api
 from util.word_search import WordsSearch
 
 
@@ -30,7 +30,7 @@ def check_for_sensitive_words(text):
 
 
 def openai_check_harmful_content(message: str) -> None:
-    openai.api_key = get_api_key_settings().openai_api_key
+    openai.api_key = get_open_ai_api()
     functions = [
         {
             "name": "check_harmful_content",

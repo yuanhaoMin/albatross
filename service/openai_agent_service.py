@@ -1,7 +1,7 @@
 from langchain.agents import AgentType, Tool, initialize_agent
 from langchain.chat_models import ChatOpenAI
 from langchain.utilities import GoogleSerperAPIWrapper
-from service.setting_service import get_api_key_settings
+from service.setting_service import get_api_key_settings, get_open_ai_api
 from service.filter_service import check_for_sensitive_words
 
 
@@ -10,7 +10,7 @@ def online_search(question: str) -> str:
     llm = ChatOpenAI(
         model_name="gpt-3.5-turbo-0613",
         temperature=0,
-        openai_api_key=get_api_key_settings().openai_api_key,
+        openai_api_key=get_open_ai_api(),
         request_timeout=2,
         max_retries=1,
         streaming=True,
