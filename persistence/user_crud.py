@@ -57,6 +57,14 @@ def update_user_last_login(id: int, last_login_time: datetime, db: Session) -> A
     return db_user
 
 
+def update_user_password(id: int, password: str, db: Session) -> AppUser:
+    db_user = db.query(AppUser).filter(AppUser.id == id).first()
+    db_user.password = password
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
 def update_user_subscription(
     id: int, access_bitmap, subscription_end_time: datetime, db: Session
 ) -> AppUser:

@@ -21,7 +21,7 @@ def get_user_by_username(username: str, db: Session) -> AppUser:
     return user
 
 
-def login_user(request: user_schema.LoginUserRequest, db: Session) -> AppUser:
+def login_user(request: user_schema.LoginRequest, db: Session) -> AppUser:
     user = user_crud.get_user_by_username(
         username=request.username,
         db=db,
@@ -31,7 +31,7 @@ def login_user(request: user_schema.LoginUserRequest, db: Session) -> AppUser:
     return user_crud.update_user_last_login(user.id, get_current_utc8_time(), db)
 
 
-def register_user(request: user_schema.RegisterUserRequest, db: Session) -> AppUser:
+def register_user(request: user_schema.RegisterRequest, db: Session) -> AppUser:
     user_with_same_username = user_crud.get_user_by_username(request.username, db)
     if user_with_same_username is not None:
         raise HTTPException(status_code=409, detail="Username already exists")
@@ -47,11 +47,10 @@ def register_user(request: user_schema.RegisterUserRequest, db: Session) -> AppU
     )
 
 
-def update_user_subscription_end_time(
-    id: int, subscription_end_time: datetime, db: Session
-) -> AppUser:
-    return user_crud.update_user_subscription(
-        id=id,
-        subscription_end_time=subscription_end_time,
+def update_user_password(username: str, password: str, db: Session) -> AppUser:
+    user = get_user_by_username(username=username, db=db)
+    return user_crud.update_user_password(
+        id=user.id,
+        password=password,
         db=db,
     )
