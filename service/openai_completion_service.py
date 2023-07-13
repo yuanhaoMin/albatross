@@ -26,7 +26,7 @@ from schema.openai_completion_schema import (
 from schema.template_args_schema import TemplateArgs
 from service.filter_service import check_for_sensitive_words
 from service.prompt_template_service import generate_prompt_from_template
-from service.setting_service import get_open_ai_api
+from service.setting_service import get_api_key_settings
 from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
 from typing import Type, Union
@@ -41,7 +41,7 @@ def create_llm(
         llm = OpenAI(
             model_name=model_type,
             temperature=temperature,
-            openai_api_key=get_open_ai_api(model_type),
+            openai_api_key=get_api_key_settings().openai_api_key,
             request_timeout=2,
             max_retries=2,
             streaming=True,
@@ -56,7 +56,7 @@ def create_llm(
         llm = ChatOpenAI(
             model_name=model_type,
             temperature=temperature,
-            openai_api_key=get_open_ai_api(model_type),
+            openai_api_key=get_api_key_settings().openai_api_key,
             request_timeout=request_timeout,
             max_retries=2,
             streaming=True,

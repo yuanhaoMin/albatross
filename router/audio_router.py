@@ -1,6 +1,6 @@
 import requests
 from fastapi import APIRouter, UploadFile
-from service.setting_service import get_open_ai_api
+from service.setting_service import get_api_key_settings
 
 router = APIRouter(
     prefix="/audio",
@@ -11,7 +11,8 @@ router = APIRouter(
 
 @router.post("/openai/transcription")
 async def openai_audio_transcribe(audio_file: UploadFile):
-    headers = {"Authorization": f"Bearer {get_open_ai_api()}"}
+    openai_api_key = get_api_key_settings().openai_api_key
+    headers = {"Authorization": f"Bearer {openai_api_key}"}
     response = requests.post(
         "https://api.openai.com/v1/audio/transcriptions",
         data={
