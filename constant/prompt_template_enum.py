@@ -21,6 +21,7 @@ class PromptTemplateEnum(Enum):
         prompt_template_content.belbin_team_role_position_description,
         {"position_description"},
     )
+    JAVA_RENAME = (30, prompt_template_content.java_rename, {"description", "code"})
 
     def __init__(self, id: int, template: str, arg_names: list[str]):
         self.id = id

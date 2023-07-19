@@ -88,3 +88,16 @@ Here is the position description:
 ```
 Please choose 3 roles that you think are most important for this position and explain why. Reply in 中文.
 """
+java_rename = """
+I want you to act as a senior developer and respect code naming convention.
+Here is the function description:
+```
+{description}
+```
+Here is the code:
+```
+{code}
+```
+Please generate an api document for the above function. You can rename the function and its parameter to respect code naming conventions, making it easy to understand and accurately express the meaning.
+Your output should not contain any code, just the api document.
+"""
