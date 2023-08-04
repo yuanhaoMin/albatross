@@ -5,9 +5,28 @@ from constant.openai_constant import OPENAI_TIMEOUT_MSG
 from fastapi import HTTPException
 from openai.error import Timeout
 from service.setting_service import get_api_key_settings
+from util.word_search import WordsSearch
 
 
 logger = logging.getLogger(__name__)
+WORD_SEARCH = None
+
+
+def get_sensitive_words() -> WordsSearch:
+    global WORD_SEARCH
+    if WORD_SEARCH is None:
+        with open(file="./util/sensitive-words.txt", mode="r", encoding="utf-8") as fp:
+            sensitive_words = fp.read().splitlines()
+        WORD_SEARCH = WordsSearch()
+        WORD_SEARCH.SetKeywords(sensitive_words)
+    return WORD_SEARCH
+
+
+def check_for_sensitive_words(text):
+    global WORD_SEARCH
+    WORD_SEARCH = get_sensitive_words()
+    if WORD_SEARCH.ContainsAny(text):
+        raise HTTPException(status_code=418, detail="Forbidden word detected")
 
 
 def openai_check_harmful_content(message: str) -> None:

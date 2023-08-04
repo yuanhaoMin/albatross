@@ -51,7 +51,7 @@ def alipay_get_success_info(
         db=db,
     )
     logger.warning('用户"{}"支付宝支付{}元'.format(user.username, total_amount))
-    return "http://175.27.160.139/"
+    return "http://bizcampgpt.com/chat"
 
 
 def alipay_notify():

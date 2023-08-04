@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field
 from schema.template_args_schema import TemplateArgs
-from typing import List, Optional
+from typing import Optional
 
 
 class BaseMessage(BaseModel):
@@ -22,7 +22,7 @@ class ChatCompletionBase(BaseModel):
 
 class GetChatCompletionHistoryResponse(BaseModel):
     id: int
-    messages: List[BaseMessage]
+    messages: list[BaseMessage]
     update_time: datetime = None
 
     class Config:
@@ -35,7 +35,7 @@ class UpdateChatCompletionRequest(ChatCompletionBase):
     system_message: Optional[str] = ""
     user_message: str = Field(min_length=1)
     template_id: Optional[int] = -1
-    template_args: Optional[List[TemplateArgs]] = []
+    template_args: Optional[list[TemplateArgs]] = []
 
 
 class UpdateChatCompletionResponse(ChatCompletionBase):

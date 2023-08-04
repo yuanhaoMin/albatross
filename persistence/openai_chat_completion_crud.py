@@ -1,13 +1,27 @@
-from datetime import datetime
 from persistence.openai_chat_completion_model import OpenAIChatCompletion
 from sqlalchemy.orm import Session
-from typing import List
+from util.time_util import get_current_utc8_time
 
 
 def create_chat_completion(
-    chat_completion: OpenAIChatCompletion,
+    user_id: int,
+    messages: str,
+    template_id: int,
+    template_args: str,
+    model: str,
+    temperature: float,
     db: Session,
 ) -> OpenAIChatCompletion:
+    chat_completion = OpenAIChatCompletion(
+        user_id=user_id,
+        messages=messages,
+        template_id=template_id,
+        template_args=template_args,
+        model=model,
+        temperature=temperature,
+        update_time=get_current_utc8_time(),
+        usage_count=1,
+    )
     db.add(chat_completion)
     db.commit()
     db.refresh(chat_completion)
@@ -15,7 +29,7 @@ def create_chat_completion(
 
 
 def delete_chat_completions(
-    chat_completions: List[OpenAIChatCompletion],
+    chat_completions: list[OpenAIChatCompletion],
     db: Session,
 ) -> None:
     for chat_completion in chat_completions:
@@ -51,7 +65,7 @@ def update_chat_completion(
     template_args: str,
     model: str,
     temperature: float,
-    update_time: datetime,
+    usage_count: int,
     db: Session,
 ) -> OpenAIChatCompletion:
     chat_completion_to_update.messages = messages
@@ -59,7 +73,8 @@ def update_chat_completion(
     chat_completion_to_update.template_args = template_args
     chat_completion_to_update.model = model
     chat_completion_to_update.temperature = temperature
-    chat_completion_to_update.update_time = update_time
+    chat_completion_to_update.update_time = get_current_utc8_time()
+    chat_completion_to_update.usage_count = usage_count
     db.commit()
     db.refresh(chat_completion_to_update)
     return chat_completion_to_update

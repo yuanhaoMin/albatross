@@ -19,6 +19,7 @@ IF OBJECT_ID('dbo.openai_completion') IS NULL
         model VARCHAR(255),
         temperature DECIMAL(3,2),
         update_time DATETIME,
+        usage_count INT,
         FOREIGN KEY (user_id) REFERENCES app_user(id),
     );
 
@@ -32,5 +33,6 @@ IF OBJECT_ID('dbo.openai_chat_completion') IS NULL
         model VARCHAR(255),
         temperature DECIMAL(3,2),
         update_time DATETIME,
+        usage_count INT,
         FOREIGN KEY (user_id) REFERENCES app_user(id),
     );

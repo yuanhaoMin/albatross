@@ -5,7 +5,6 @@ from langchain.chat_models import ChatOpenAI, openai
 from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from persistence.openai_chat_completion_crud import (
     create_chat_completion,
-    delete_chat_completions,
     delete_chat_completion_by_id,
     read_chat_completion_by_id,
     update_chat_completion,
@@ -18,19 +17,18 @@ from schema.openai_chat_completion_schema import (
 
 # Do not delete TemplateArgs, It is needed implicitly when eval messages
 from schema.template_args_schema import TemplateArgs
-from service.filter_service import openai_check_harmful_content
+from service.filter_service import check_for_sensitive_words
 from service.openai_completion_service import create_llm
 from service.prompt_template_service import generate_prompt_from_template
 from service.user_service import get_user_by_username
 from sqlalchemy.orm import Session
-from typing import List, Tuple, Type
-from util.time_util import get_current_utc8_time
+from typing import Type
 
 
 def create_update_chat_completion(
     request: UpdateChatCompletionRequest, db: Session
 ) -> OpenAIChatCompletion:
-    # openai_check_harmful_content(request.user_message)
+    check_for_sensitive_words(request.user_message)
 
     user = get_user_by_username(request.username, db)
     chat_completion_to_update: Type[OpenAIChatCompletion] = next(
@@ -39,23 +37,21 @@ def create_update_chat_completion(
     )
     existing_args = []
     messages = []
-    update_time = get_current_utc8_time()
     if chat_completion_to_update is None:
         system_message = generate_system_message(request=request, existing_args=[])
         messages = [system_message, HumanMessage(content=request.user_message)]
-        chat_completion = OpenAIChatCompletion(
+        return create_chat_completion(
             user_id=user.id,
             messages=str(messages),
             template_id=request.template_id,
             template_args=str(existing_args),
             model=request.model,
             temperature=request.temperature,
-            update_time=update_time,
+            db=db,
         )
-        return create_chat_completion(chat_completion=chat_completion, db=db)
     else:
         existing_args = eval(chat_completion_to_update.template_args)
-        messages: Type[List[BaseMessage]] = eval(chat_completion_to_update.messages)
+        messages: Type[list[BaseMessage]] = eval(chat_completion_to_update.messages)
         if not messages:
             system_message = generate_system_message(request=request, existing_args=[])
             messages = [system_message, HumanMessage(content=request.user_message)]
@@ -72,7 +68,7 @@ def create_update_chat_completion(
             template_args=str(existing_args),
             model=request.model,
             temperature=request.temperature,
-            update_time=update_time,
+            usage_count=chat_completion_to_update.usage_count + 1,
             db=db,
         )
 
@@ -95,7 +91,7 @@ def delete_user_chat_completions(
 
 def generate_system_message(
     request: UpdateChatCompletionRequest,
-    existing_args: List[TemplateArgs],
+    existing_args: list[TemplateArgs],
 ) -> str:
     if request.system_message:
         system_message_content = request.system_message
@@ -130,7 +126,7 @@ def get_user_template_chat_completion_history(
             messages=[],
             update_time=None,
         )
-    messages: Type[List[BaseMessage]] = eval(chat_completion.messages)
+    messages: Type[list[BaseMessage]] = eval(chat_completion.messages)
     # Remove system message, which is the first message
     if messages and isinstance(messages[0], SystemMessage):
         messages = messages[1:]
@@ -144,7 +140,7 @@ def get_user_template_chat_completion_history(
 
 def prepare_chat_completion(
     chat_completion_id: int, db: Session
-) -> Tuple[OpenAIChatCompletion, ChatOpenAI, List[BaseMessage]]:
+) -> tuple[OpenAIChatCompletion, ChatOpenAI, list[BaseMessage]]:
     chat_completion = read_chat_completion_by_id(chat_completion_id, db)
     if chat_completion is None:
         raise HTTPException(
@@ -160,7 +156,7 @@ def prepare_chat_completion(
 
 
 def reset_chat_completions(
-    chat_completions: List[OpenAIChatCompletion], db: Session
+    chat_completions: list[OpenAIChatCompletion], db: Session
 ) -> None:
     for chat_completion in chat_completions:
         update_chat_completion(
@@ -170,6 +166,6 @@ def reset_chat_completions(
             template_args=chat_completion.template_args,
             model=chat_completion.model,
             temperature=chat_completion.temperature,
-            update_time=chat_completion.update_time,
+            usage_count=chat_completion.usage_count,
             db=db,
         )
