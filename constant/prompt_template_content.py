@@ -100,4 +100,5 @@ Here is the code:
 ```
 Please generate an api document for the above function. You can rename the function and its parameter to respect code naming conventions, making it easy to understand and accurately express the meaning.
 Your output should not contain any code, just the api document.
+Reply in 中文.
 """
