@@ -144,9 +144,6 @@ def generate_stream_for_chat_model(
     event_data = EventData()
     contents = []
     retry_count = 0
-    timeout_log_message = OPENAI_TIMEOUT_MSG.format(
-        function_name=generate_stream_for_chat_model.__name__
-    )
     # TODO: the langchain retry logic is not working, need to fix it
     while True:
         try:
@@ -172,24 +169,23 @@ def generate_stream_for_chat_model(
                     event_data.hasEnd = True
                     yield "data: %s\n\n" % event_data.json()
             break
-        except Timeout:
+        except Exception as e:
             retry_count += 1
             if retry_count > chat_model.max_retries:
                 raise HTTPException(
                     status_code=504,
-                    detail=timeout_log_message,
+                    detail=f"Failed to get completion response from OpenAI API after {chat_model.max_retries} retries. Error: {e}",
                 )
             else:
-                logger.warning(timeout_log_message)
+                logger.warning(
+                    f"Failed to get completion response from OpenAI API. Retrying... Error: {e}"
+                )
                 continue
 
 
 def generate_stream_for_completion_model(llm: OpenAI, prompt: str) -> str:
     event_data = EventData()
     retry_count = 0
-    timeout_log_message = OPENAI_TIMEOUT_MSG.format(
-        function_name=generate_stream_for_completion_model.__name__
-    )
     while True:
         try:
             for stream_response in llm.stream(prompt):
@@ -200,15 +196,17 @@ def generate_stream_for_completion_model(llm: OpenAI, prompt: str) -> str:
                     yield "data: %s\n\n" % event_data.json()
                 else:
                     yield "data: %s\n\n" % event_data.json()
-        except Timeout:
+        except Exception as e:
             retry_count += 1
             if retry_count > llm.max_retries:
                 raise HTTPException(
                     status_code=504,
-                    detail=timeout_log_message,
+                    detail=f"Failed to get completion response from OpenAI API after {llm.max_retries} retries. Error: {e}",
                 )
             else:
-                logger.warning(timeout_log_message)
+                logger.warning(
+                    f"Failed to get completion response from OpenAI API. Retrying... Error: {e}"
+                )
                 continue
 
 
