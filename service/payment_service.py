@@ -41,13 +41,20 @@ def alipay_get_success_info(
     user_id = out_trade_no[14:]
     user = user_crud.get_user_by_id(user_id, db)
     subscription_plan = SubscriptionPlanEnum.from_price(int(total_amount))
-    subscription_end_time = user.subscription_end_time + timedelta(
-        days=31 * subscription_plan.month
-    )
+    current_time = datetime.now()
+    # Check if the user's subscription has already expired
+    if current_time > user.subscription_end_time:
+        # If expired, set the new end time from the current date
+        new_end_time = current_time + timedelta(days=31 * subscription_plan.month)
+    else:
+        # If still active, extend from their current subscription end time
+        new_end_time = user.subscription_end_time + timedelta(
+            days=31 * subscription_plan.month
+        )
     user_crud.update_user_subscription(
         id=user.id,
         access_bitmap=subscription_plan.access_bitmap,
-        subscription_end_time=subscription_end_time,
+        subscription_end_time=new_end_time,
         db=db,
     )
     logger.warning('用户"{}"支付宝支付{}元'.format(user.username, total_amount))
