@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
+from typing import Optional
 
 
 class UserBase(BaseModel):
@@ -9,10 +10,11 @@ class UserBase(BaseModel):
 
 class GetInfoResponse(UserBase):
     id: int
+    password: str
     access_bitmap: int
     created_time: datetime
-    last_login_time: datetime
-    subscription_end_time: datetime
+    last_login_time: Optional[datetime] = None
+    subscription_end_time: Optional[datetime] = None
 
     class Config:
         orm_mode = True

@@ -1,13 +1,11 @@
 import asyncio
 import logging
-from constant.openai_constant import OPENAI_TIMEOUT_MSG
 from fastapi import HTTPException
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import OpenAI
 
 # Do not delete SystemMessage, It is needed implicitly when eval messages
 from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
-from openai.error import Timeout
 from persistence.openai_chat_completion_crud import update_chat_completion_messages
 from persistence.openai_completion_crud import (
     create_completion,
@@ -24,7 +22,6 @@ from schema.openai_completion_schema import (
 
 # Do not delete TemplateArgs, It is needed implicitly when eval messages
 from schema.template_args_schema import TemplateArgs
-from service.filter_service import check_for_sensitive_words
 from service.prompt_template_service import generate_prompt_from_template
 from service.setting_service import get_api_key_settings
 from service.user_service import get_user_by_username
@@ -99,7 +96,6 @@ def create_update_completion(
         existing_args=existing_args,
         new_args=request.template_args,
     )
-    check_for_sensitive_words(prompt)
     formatted_prompt = determine_prompt_formate_by_model(request.model, prompt)
     if completion_to_update is None:
         return create_completion(
